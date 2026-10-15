@@ -2,6 +2,8 @@
 
 A private multiplayer Cabo table by Srikar Veluvali, built with Next.js, React, TypeScript, and Motion. The forest-green felt, brass controls, self-hosted DM Sans, private-room flow, and Redis architecture follow the companion BlackJack game.
 
+[Play Cabo](https://cabo-multiplayer.vercel.app/) · [GitHub repository](https://github.com/SrikarVeluvali/cabo-multiplayer)
+
 ![Cabo’s animated multiplayer table](docs/screenshots/table-desktop.jpg)
 
 ## Run it
@@ -55,7 +57,7 @@ The server listens on `0.0.0.0:3000`. Configure `PORT` for another port. Put it 
 
 Cabo defaults to `cabo:<VERCEL_ENV or development>:room:` Redis keys, so it can share a database with BlackJack without mixing rooms. To isolate specific installations or previews, set `ROOM_STORE_PREFIX`. Rooms expire after 24 hours without game activity. Unchanged polls do not extend room lifetime. Idle local files are rejected after expiry but are not automatically deleted from disk.
 
-The app is ready for these hosting options; no public deployment or database has been created by this repository itself.
+The production game runs on Vercel in Mumbai, with shared Redis storage and a separate Cabo key namespace. The connected GitHub repository deploys updates from `main` automatically. The game is publicly playable; the source repository is private.
 
 ## Multiplayer and privacy
 
