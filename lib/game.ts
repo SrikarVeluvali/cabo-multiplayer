@@ -60,8 +60,15 @@ export function addLog(
   text: string,
   kind: Room['events'][number]['kind'] = 'info',
   now = Date.now(),
+  announcement?: string,
 ) {
-  room.events.push({ id: randomUUID(), text, kind, at: now });
+  room.events.push({
+    id: randomUUID(),
+    text,
+    kind,
+    at: now,
+    ...(announcement ? { announcement } : {}),
+  });
   room.events = room.events.slice(-500);
   room.updated = now;
 }
@@ -208,7 +215,7 @@ function discardDrawn(room: Room, now: number) {
   const card = room.drawn!;
   room.discard.push(card);
   room.drawn = null;
-  addLog(room, `${current(room).name} discarded ${card.rank}.`, 'discard', now);
+  addLog(room, `${current(room).name} discarded ${card.rank}.`, 'discard', now, 'Card discarded');
   moveCards(
     room,
     'discard',
@@ -232,7 +239,13 @@ function snapPenalty(room: Room, id: string, now: number) {
     return;
   }
   me.cards.push(penalty);
-  addLog(room, `${me.name} missed the snap. One hidden penalty card.`, 'penalty', now);
+  addLog(
+    room,
+    `${me.name} missed the snap. One hidden penalty card.`,
+    'penalty',
+    now,
+    'Snap missed',
+  );
   releaseBuzzer(room, now);
   moveCards(
     room,
@@ -266,6 +279,7 @@ function giveCard(room: Room, id: string, cardId: string, now: number) {
     `${me.name} snapped ${target.owner.name}’s ${target.card.rank} and gave them card ${index + 1}.`,
     'snap',
     now,
+    'Opponent card snapped',
   );
   releaseBuzzer(room, now);
   moveCards(
@@ -453,7 +467,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
     } else {
       const hands = handSnapshot(target.owner);
       room.discard.push(target.owner.cards.splice(target.index, 1)[0]);
-      addLog(room, `${me.name} snapped a ${top.rank}!`, 'snap', now);
+      addLog(room, `${me.name} snapped a ${top.rank}!`, 'snap', now, 'Card snapped');
       releaseBuzzer(room, now);
       moveCards(
         room,
@@ -496,7 +510,13 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
     if (room.caboId) throw new Error('CABO has already been called.');
     room.caboId = id;
     room.finalTurns = room.players.filter((p) => p.id !== id).map((p) => p.id);
-    addLog(room, `${me.name} called CABO. Everyone else gets one final turn.`, 'cabo', now);
+    addLog(
+      room,
+      `${me.name} called CABO. Everyone else gets one final turn.`,
+      'cabo',
+      now,
+      'CABO called',
+    );
     endTurn(room, now);
     return;
   }
@@ -540,6 +560,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
         `${me.name} replaced card ${index + 1}, discarding ${old.rank}.`,
         'discard',
         now,
+        'Card replaced',
       );
       endTurn(room, now);
       lock(room, now, 3000);
@@ -553,7 +574,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
       room.power = power;
       room.stage = power.count ? 'power-look' : 'power-swap';
       lock(room, now, CARD_SETTLE_MS);
-      addLog(room, `${me.name} played ${power.label.toLowerCase()}.`, 'info', now);
+      addLog(room, `${me.name} played ${power.label.toLowerCase()}.`, 'info', now, 'Power played');
       return;
     }
   }
@@ -561,7 +582,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
     if (action.type === 'skip-look') {
       if (room.power.swap) room.stage = 'power-swap';
       else endTurn(room, now);
-      room.updated = now;
+      addLog(room, `${me.name} skipped looking at cards.`, 'info', now, 'Look skipped');
       return;
     }
     if (action.type === 'look') {
@@ -597,6 +618,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
   if (room.stage === 'power-swap') {
     if (action.type === 'skip-swap') {
       endTurn(room, now);
+      addLog(room, `${me.name} left every card in place.`, 'info', now, 'Swap skipped');
       return;
     }
     if (action.type === 'swap') {
@@ -610,6 +632,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
         `${me.name} swapped ${a.owner.name}’s card ${a.index + 1} with ${b.owner.name}’s card ${b.index + 1}.`,
         'swap',
         now,
+        'Cards swapped',
       );
       endTurn(room, now);
       moveCards(

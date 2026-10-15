@@ -5,9 +5,9 @@ import type { CardLocation, CardMovement } from '@/lib/types';
 import Card from './card';
 
 type Point = { x: number; y: number };
-export default function CardMotion({ movement }: { movement: CardMovement }) {
+export default function CardMotion({ movement, now }: { movement: CardMovement; now: number }) {
   const [paths, setPaths] = useState<{ from: Point; to: Point; elapsed: number }[]>([]);
-  const started = useRef(performance.now());
+  const started = useRef({ server: now, local: performance.now() });
   useLayoutEffect(() => {
     function point(location: CardLocation): Point {
       const selector =
@@ -31,7 +31,11 @@ export default function CardMotion({ movement }: { movement: CardMovement }) {
         movement.flights.map((f) => ({
           from: point(f.from),
           to: point(f.to),
-          elapsed: (performance.now() - started.current) / 1000,
+          elapsed: Math.max(
+            0,
+            (started.current.server - movement.at + performance.now() - started.current.local) /
+              1000,
+          ),
         })),
       );
     measure();

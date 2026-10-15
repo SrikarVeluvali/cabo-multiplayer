@@ -1,5 +1,5 @@
 'use client';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { PublicRoom } from '@/lib/types';
 import Card from './card';
@@ -13,6 +13,7 @@ export default function ReplacementMotion({
   replacement: NonNullable<PublicRoom['replacement']>;
   now: number;
 }) {
+  const started = useRef({ server: now, local: performance.now() });
   const [path, setPath] = useState<{
     hand: DOMRect;
     draw: DOMRect;
@@ -29,7 +30,10 @@ export default function ReplacementMotion({
           hand: hand.getBoundingClientRect(),
           draw: draw.getBoundingClientRect(),
           discard: discard.getBoundingClientRect(),
-          elapsed: Math.max(0, (now - r.at) / 1000),
+          elapsed: Math.max(
+            0,
+            (started.current.server - r.at + performance.now() - started.current.local) / 1000,
+          ),
         });
     };
     measure();

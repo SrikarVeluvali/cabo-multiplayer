@@ -14,7 +14,8 @@ export default function Card({
   label,
   selected = false,
   small = false,
-  sharedLayout = true,
+  sharedLayout = false,
+  layoutScope,
 }: {
   card: TableCard;
   visible?: boolean;
@@ -25,6 +26,7 @@ export default function Card({
   selected?: boolean;
   small?: boolean;
   sharedLayout?: boolean;
+  layoutScope?: string;
 }) {
   const face = visible && !!card.rank && !!card.suit;
   const red = card.suit === 'hearts' || card.suit === 'diamonds';
@@ -64,9 +66,9 @@ export default function Card({
     >
       <motion.div
         ref={ref}
-        layoutId={sharedLayout ? `card-${card.id}` : undefined}
-        layout={sharedLayout}
+        layoutId={sharedLayout ? `peek-${layoutScope}-${card.id}` : undefined}
         className="card-travel"
+        data-deal-index={initialDealIndex.current}
         style={{ x, y, opacity }}
         transition={{ layout: { duration: reduce ? 0 : 0.85, ease: [0.22, 0.7, 0.15, 1] } }}
       >

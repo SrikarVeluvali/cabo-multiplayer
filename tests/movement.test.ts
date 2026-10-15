@@ -36,6 +36,7 @@ test('discard flight includes its public face and reserves the table through rec
   });
   assert.equal(motion.discardUnder?.id, previous.id);
   assert.equal(room.availableAt, now + 800 + CARD_SETTLE_MS);
+  assert.equal(publicRoom(room, guest, now + 800).events.at(-1)?.announcement, 'Card discarded');
   assert.throws(() => act(room, guest, { type: 'buzz', topId: drawn.id }, now + 900), /settle/);
   tick(room, now + 800 + CARD_FLIGHT_MS);
   assert.equal(room.movement, null);
@@ -103,4 +104,25 @@ test('buzzer timeout animates an unseen penalty from the deck', () => {
   assert.equal(motion.kind, 'penalty');
   assert.deepEqual(Object.keys(motion.flights[0].card), ['id']);
   assert.deepEqual(motion.flights[0].from, { zone: 'deck' });
+});
+
+test('playing a power and skipping its swap publishes distinct notices to every seat', () => {
+  const { room, host, guest, now } = setup();
+  const jack = room.deck.findIndex((card) => card.rank === 'J');
+  [room.deck[jack], room.deck[room.deck.length - 1]] = [room.deck.at(-1)!, room.deck[jack]];
+  act(room, host, { type: 'draw' }, now);
+  act(room, host, { type: 'power' }, now + 800);
+  const power = publicRoom(room, guest, now + 800).events.at(-1)!;
+  assert.equal(power.announcement, 'Power played');
+  assert.equal(room.stage, 'power-swap');
+  act(room, host, { type: 'skip-swap' }, now + 800 + CARD_SETTLE_MS);
+  const skip = room.events.at(-1)!;
+  assert.equal(skip.announcement, 'Swap skipped');
+  assert.notEqual(skip.id, power.id);
+  assert.equal(skip.at, now + 800 + CARD_SETTLE_MS);
+  assert.deepEqual(
+    publicRoom(room, host, skip.at).events.at(-1),
+    publicRoom(room, guest, skip.at).events.at(-1),
+  );
+  assert.equal(room.stage, 'between');
 });

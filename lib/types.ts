@@ -30,6 +30,7 @@ export type GameEvent = {
   text: string;
   at: number;
   kind: 'info' | 'draw' | 'discard' | 'swap' | 'snap' | 'penalty' | 'cabo';
+  announcement?: string;
 };
 export type Replacement = {
   playerId: string;

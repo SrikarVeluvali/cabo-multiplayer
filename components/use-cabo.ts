@@ -29,7 +29,11 @@ export function useCabo() {
       return;
     accepted.current = { code: next.code, version: next.version, serverNow: next.serverNow, gen };
     offset.current = next.serverNow - Date.now();
-    setNow(next.serverNow);
+    setNow((old) =>
+      previous?.gen === gen && previous.code === next.code
+        ? Math.max(old, next.serverNow)
+        : next.serverNow,
+    );
     setRoom((old) => (old?.code === next.code && old.version > next.version ? old : next));
     setOffline(false);
   }, []);
@@ -42,7 +46,10 @@ export function useCabo() {
       sessionStorage.removeItem('cabo-seat');
       setRestoring(false);
     }
-    const timer = setInterval(() => setNow(Date.now() + offset.current), 100);
+    const timer = setInterval(
+      () => setNow((old) => Math.max(old, Date.now() + offset.current)),
+      100,
+    );
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {

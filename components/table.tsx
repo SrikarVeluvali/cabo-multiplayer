@@ -23,6 +23,7 @@ import type { PublicRoom, Target } from '@/lib/types';
 import Card from './card';
 import ReplacementMotion from './replacement-motion';
 import CardMotion from './card-motion';
+import TableAction from './table-action';
 import { Avatar, type OnAction } from './cabo';
 import { useViewport } from './use-viewport';
 
@@ -95,7 +96,13 @@ export default function Table({
         ? Math.floor(ordered.findIndex((p) => p.id === focusOwner) / capacity)
         : Math.min(seatPage, seatPages - 1);
   const shown = ordered.slice(page * capacity, (page + 1) * capacity);
-  const knownIds = useRef(new Set(room.players.flatMap((p) => p.cards.map((c) => c.id))));
+  // A peek temporarily unmounts its hand card. Remember the first deal across
+  // those remounts, including the beat before polling ends the opening phase.
+  const knownIds = useRef(
+    new Set(
+      peek && now < room.availableAt ? [] : room.players.flatMap((p) => p.cards.map((c) => c.id)),
+    ),
+  );
   useEffect(() => {
     room.players.forEach((p) => p.cards.forEach((c) => knownIds.current.add(c.id)));
     if (room.drawn) knownIds.current.add(room.drawn.id);
@@ -338,13 +345,18 @@ export default function Table({
                   <Card
                     card={c}
                     visible={face}
-                    sharedLayout={!movingIds.has(c.id)}
+                    sharedLayout={!movingIds.has(c.id) && replacement?.cardId !== c.id}
+                    layoutScope={p.id}
                     dealIndex={
-                      peek
-                        ? i * room.players.length + room.players.findIndex((x) => x.id === p.id)
-                        : !movingIds.has(c.id) && !knownIds.current.has(c.id)
-                          ? 0
-                          : undefined
+                      !movingIds.has(c.id) &&
+                      replacement?.cardId !== c.id &&
+                      !knownIds.current.has(c.id)
+                        ? peek
+                          ? now < room.availableAt
+                            ? i * room.players.length + room.players.findIndex((x) => x.id === p.id)
+                            : undefined
+                          : 0
+                        : undefined
                     }
                     onClick={
                       selectable(p.id, c.id)
@@ -376,6 +388,10 @@ export default function Table({
                   key={c.id}
                   card={c}
                   visible={own && !!c.rank}
+                  sharedLayout
+                  layoutScope={
+                    room.players.find((owner) => owner.cards.some((card) => card.id === c.id))?.id
+                  }
                   label={
                     own && c.rank
                       ? `Private peek, ${c.rank} of ${c.suit}`
@@ -543,7 +559,8 @@ export default function Table({
                   {room.players.find((p) => p.id === h.playerId)?.name}
                 </div>
               ))}
-            {movement && <CardMotion key={movement.id} movement={movement} />}
+            {!reveals.length && <TableAction room={room} now={now} />}
+            {movement && <CardMotion key={movement.id} movement={movement} now={now} />}
             {replacement && (
               <ReplacementMotion key={replacement.at} replacement={replacement} now={now} />
             )}
@@ -554,6 +571,8 @@ export default function Table({
                     <div key={r.card.id} data-public-card={r.card.id}>
                       <Card
                         card={r.card}
+                        sharedLayout
+                        layoutScope={r.owner.id}
                         onClick={
                           selectable(r.owner.id, r.card.id)
                             ? () => choose({ playerId: r.owner.id, cardId: r.card.id })
