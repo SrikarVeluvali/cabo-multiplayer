@@ -1,0 +1,38 @@
+{
+  "name": "cabo",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "tsx --test tests/*.test.ts",
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test:integration": "node scripts/smoke.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [],
+  "author": "Srikar Veluvali",
+  "license": "UNLICENSED",
+  "description": "Private multiplayer Cabo with animated cards",
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "motion": "^14.2.0",
+    "next": "^16.4.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  }
+}

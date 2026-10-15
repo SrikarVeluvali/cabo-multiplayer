@@ -1,0 +1,10 @@
+.git/
+.github/
+.data/
+.env*
+!.env.example
+artifacts/
+tests/
+*.log
+*.tsbuildinfo
+docs/screenshots/
