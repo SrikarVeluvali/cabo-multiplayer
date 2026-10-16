@@ -2,13 +2,19 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowsLeftRight, Crown, Eye, Hand, Spade } from '@phosphor-icons/react';
 import type { PublicRoom } from '@/lib/types';
+import { tableActionEvent } from '@/lib/table-events';
 
-export default function TableAction({ room, now }: { room: PublicRoom; now: number }) {
+export default function TableAction({
+  room,
+  now,
+  revealing = false,
+}: {
+  room: PublicRoom;
+  now: number;
+  revealing?: boolean;
+}) {
   const reduce = useReducedMotion();
-  const event =
-    room.phase === 'playing' && !room.snap
-      ? room.events.findLast((e) => e.announcement && now >= e.at && now < e.at + 2800)
-      : undefined;
+  const event = tableActionEvent(room, now, revealing);
   const Icon =
     event?.kind === 'swap' || event?.announcement === 'Swap skipped'
       ? ArrowsLeftRight
@@ -33,7 +39,7 @@ export default function TableAction({ room, now }: { room: PublicRoom; now: numb
           >
             <Icon weight="duotone" aria-hidden="true" />
             <div>
-              <strong>{event.announcement}</strong>
+              <strong>{event.equation || event.announcement}</strong>
               <p>{event.text}</p>
             </div>
           </motion.div>

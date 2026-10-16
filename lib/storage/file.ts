@@ -1,4 +1,5 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import { setTimeout as pause } from 'node:timers/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import type { RoomStorage } from './types';
@@ -55,7 +56,30 @@ export class FileRoomStorage implements RoomStorage {
       const target = this.file(code),
         temporary = `${target}.${randomUUID()}.tmp`;
       await writeFile(temporary, snapshot);
-      await rename(temporary, target);
+      try {
+        // Windows indexing/antivirus can briefly hold the destination even
+        // after our own read has closed. Keep the atomic replacement and room
+        // queue intact while retrying only these transient sharing failures.
+        for (let attempt = 0; ; attempt++) {
+          try {
+            await rename(temporary, target);
+            break;
+          } catch (error) {
+            const code = (error as NodeJS.ErrnoException).code;
+            if (
+              process.platform !== 'win32' ||
+              !['EPERM', 'EBUSY', 'EACCES'].includes(code ?? '') ||
+              attempt >= 4
+            )
+              throw error;
+            await pause(25 * 2 ** attempt);
+          }
+        }
+      } finally {
+        await unlink(temporary).catch((error: NodeJS.ErrnoException) => {
+          if (error.code !== 'ENOENT') throw error;
+        });
+      }
       return true;
     });
   }

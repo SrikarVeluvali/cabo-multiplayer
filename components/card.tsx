@@ -1,8 +1,9 @@
 'use client';
-import { useLayoutEffect, useRef } from 'react';
+import { memo, useLayoutEffect, useRef } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion } from 'motion/react';
-import { Spade } from '@phosphor-icons/react';
+import Image from 'next/image';
 import type { TableCard } from '@/lib/types';
+import { cardArtwork } from '@/lib/card-art';
 
 export const suitSymbol = { spades: '♠', hearts: '♥', clubs: '♣', diamonds: '♦' };
 export default function Card({
@@ -14,8 +15,6 @@ export default function Card({
   label,
   selected = false,
   small = false,
-  sharedLayout = false,
-  layoutScope,
 }: {
   card: TableCard;
   visible?: boolean;
@@ -25,8 +24,6 @@ export default function Card({
   label?: string;
   selected?: boolean;
   small?: boolean;
-  sharedLayout?: boolean;
-  layoutScope?: string;
 }) {
   const face = visible && !!card.rank && !!card.suit;
   const red = card.suit === 'hearts' || card.suit === 'diamonds';
@@ -66,38 +63,50 @@ export default function Card({
     >
       <motion.div
         ref={ref}
-        layoutId={sharedLayout ? `peek-${layoutScope}-${card.id}` : undefined}
         className="card-travel"
         data-deal-index={initialDealIndex.current}
         style={{ x, y, opacity }}
-        transition={{ layout: { duration: reduce ? 0 : 0.85, ease: [0.22, 0.7, 0.15, 1] } }}
       >
         <motion.div
           className="card-flipper"
+          initial={false}
           animate={{ rotateY: face ? 180 : 0 }}
           transition={{ duration: reduce ? 0 : 0.45 }}
         >
           <div className="card-back card-side">
-            <div className="back-border">
-              <Spade weight="fill" />
-              <span>CABO</span>
-              <i />
-            </div>
+            <Image
+              className="card-sleeve-img"
+              src="/art/engraved-sleeve.webp"
+              alt=""
+              width={320}
+              height={480}
+              unoptimized
+              draggable={false}
+              loading="eager"
+            />
           </div>
           <div className={`card-front card-side ${red ? 'red' : 'black'}`}>
-            <span className="card-corner">
-              {card.rank}
-              <small>{card.suit ? suitSymbol[card.suit] : ''}</small>
-            </span>
-            <span className="card-pip">{card.suit ? suitSymbol[card.suit] : ''}</span>
-            <span className="card-corner bottom">
-              {card.rank}
-              <small>{card.suit ? suitSymbol[card.suit] : ''}</small>
-            </span>
-            {card.rank === 'K' && red && <span className="red-king-value">−1</span>}
+            <CardFace rank={card.rank} suit={card.suit} />
           </div>
         </motion.div>
       </motion.div>
     </button>
   );
 }
+
+// The clock updates ten times per second. Artwork only changes with the card.
+const CardFace = memo(function CardFace({ rank, suit }: Pick<TableCard, 'rank' | 'suit'>) {
+  if (!rank || !suit) return null;
+  return (
+    <Image
+      className="card-face-img"
+      src={cardArtwork(rank, suit)}
+      alt=""
+      width={334}
+      height={486}
+      unoptimized
+      draggable={false}
+      loading="eager"
+    />
+  );
+});

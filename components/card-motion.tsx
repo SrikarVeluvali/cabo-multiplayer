@@ -1,11 +1,21 @@
 'use client';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { CardLocation, CardMovement } from '@/lib/types';
 import Card from './card';
 
 type Point = { x: number; y: number };
-export default function CardMotion({ movement, now }: { movement: CardMovement; now: number }) {
+function CardMotion({
+  movement,
+  now,
+  width = 52,
+  height = 74,
+}: {
+  movement: CardMovement;
+  now: number;
+  width?: number;
+  height?: number;
+}) {
   const [paths, setPaths] = useState<{ from: Point; to: Point; elapsed: number }[]>([]);
   const started = useRef({ server: now, local: performance.now() });
   useLayoutEffect(() => {
@@ -19,11 +29,11 @@ export default function CardMotion({ movement, now }: { movement: CardMovement; 
         element = document.querySelector(`[data-motion-anchor="${location.playerId}"]`);
       const rect = (element || document.querySelector('.opponents'))!.getBoundingClientRect();
       return {
-        x: rect.x + (rect.width - 52) / 2,
+        x: rect.x + (rect.width - width) / 2,
         y:
           location.zone === 'hand' && element?.hasAttribute('data-hand-slot')
             ? rect.y
-            : rect.y + (rect.height - 74) / 2,
+            : rect.y + (rect.height - height) / 2,
       };
     }
     const measure = () =>
@@ -41,7 +51,7 @@ export default function CardMotion({ movement, now }: { movement: CardMovement; 
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [movement.id]);
+  }, [movement.id, width, height]);
   return (
     <div className="card-flight-layer" aria-label={`${movement.kind} card animation`}>
       {paths.map(({ from, to, elapsed }, i) => {
@@ -53,6 +63,7 @@ export default function CardMotion({ movement, now }: { movement: CardMovement; 
           <motion.div
             key={flight.card.id}
             className="flying-card"
+            style={{ width, height }}
             initial={{ x: from.x, y: from.y, rotate: 0, scale: 1 }}
             animate={{
               x: [from.x, from.x, (from.x + to.x) / 2, to.x, to.x],
@@ -67,10 +78,18 @@ export default function CardMotion({ movement, now }: { movement: CardMovement; 
               ease: 'easeInOut',
             }}
           >
-            <Card card={flight.card} visible={flight.faceUp} sharedLayout={false} />
+            <Card card={flight.card} visible={flight.faceUp} />
           </motion.div>
         );
       })}
     </div>
   );
 }
+
+export default memo(
+  CardMotion,
+  (before, after) =>
+    before.movement.id === after.movement.id &&
+    before.width === after.width &&
+    before.height === after.height,
+);

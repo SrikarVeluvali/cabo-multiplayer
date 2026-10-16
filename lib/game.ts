@@ -1,4 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto';
+import { checkMathbo, simpleMathbo } from './mathbo';
+import { VIEW_RETURN_MS } from './card-views';
 import type {
   Action,
   Card,
@@ -61,6 +63,7 @@ export function addLog(
   kind: Room['events'][number]['kind'] = 'info',
   now = Date.now(),
   announcement?: string,
+  equation?: string,
 ) {
   room.events.push({
     id: randomUUID(),
@@ -68,6 +71,7 @@ export function addLog(
     kind,
     at: now,
     ...(announcement ? { announcement } : {}),
+    ...(equation ? { equation } : {}),
   });
   room.events = room.events.slice(-500);
   room.updated = now;
@@ -82,7 +86,7 @@ export function createRoom(code: string, name: string, token: string): Room {
     players: [host],
     phase: 'lobby',
     stage: 'draw',
-    settings: { turnSeconds: 45, pace: 'relaxed' },
+    settings: { turnSeconds: 45, pace: 'relaxed', mode: 'cabo', mathSeconds: 15 },
     round: 0,
     deck: [],
     discard: [],
@@ -298,6 +302,68 @@ function giveCard(room: Room, id: string, cardId: string, now: number) {
     now,
   );
 }
+function completeSnap(
+  room: Room,
+  id: string,
+  target: ReturnType<typeof targetCard>,
+  now: number,
+  mathbo = false,
+) {
+  const me = room.players.find((p) => p.id === id)!;
+  if (target.owner.id !== id) {
+    room.snap!.stage = 'give';
+    room.snap!.target = { playerId: target.owner.id, cardId: target.card.id };
+    room.snap!.deadline = now + SNAP_MS;
+    room.publicReveals[target.card.id] = room.snap!.deadline;
+    addLog(
+      room,
+      `${me.name} ${mathbo ? 'solved Mathbo' : 'found a match'} in ${target.owner.name}’s hand. Choose a card to give.`,
+      'snap',
+      now,
+    );
+  } else {
+    const hands = handSnapshot(target.owner);
+    room.discard.push(target.owner.cards.splice(target.index, 1)[0]);
+    delete room.publicReveals[target.card.id];
+    addLog(
+      room,
+      `${me.name} ${mathbo ? 'solved Mathbo and ' : ''}snapped a ${target.card.rank}!`,
+      'snap',
+      now,
+      mathbo ? undefined : 'Card snapped',
+    );
+    releaseBuzzer(room, now);
+    moveCards(
+      room,
+      'snap',
+      [
+        {
+          card: target.card,
+          from: mathbo ? { zone: 'reveal' } : { zone: 'hand', playerId: id, index: target.index },
+          to: { zone: 'discard' },
+          faceUp: true,
+        },
+      ],
+      hands,
+      now,
+    );
+  }
+}
+function failMathbo(room: Room, id: string, now: number, reason: string) {
+  const target = room.snap!.target!;
+  room.publicReveals[target.cardId] = now + 5000;
+  snapPenalty(room, id, now);
+  if (room.phase !== 'playing') return;
+  room.availableAt = now + 5000;
+  room.deadline += 5000 - CARD_SETTLE_MS;
+  addLog(
+    room,
+    `${room.players.find((p) => p.id === id)!.name} missed Mathbo. ${reason} The attempted card stays revealed for five seconds.`,
+    'penalty',
+    now,
+    'Mathbo missed',
+  );
+}
 export function act(room: Room, id: string, action: Action, now = Date.now()) {
   const me = room.players.find((p) => p.id === id);
   if (!me) throw new Error('Your seat is no longer available.');
@@ -340,9 +406,20 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
     }
     if (action.type === 'settings' && host && room.phase === 'lobby') {
       const s = action.settings;
-      if (!s || ![30, 45, 60, 90].includes(s.turnSeconds) || !['relaxed', 'quick'].includes(s.pace))
+      if (
+        !s ||
+        ![30, 45, 60, 90].includes(s.turnSeconds) ||
+        !['relaxed', 'quick'].includes(s.pace) ||
+        (s.mode !== undefined && !['cabo', 'mathbo'].includes(s.mode)) ||
+        (s.mathSeconds !== undefined && ![5, 8, 10, 15, 20, 30, 45, 60].includes(s.mathSeconds))
+      )
         throw new Error('Choose valid table settings.');
-      room.settings = { turnSeconds: s.turnSeconds, pace: s.pace };
+      room.settings = {
+        turnSeconds: s.turnSeconds,
+        pace: s.pace,
+        mode: s.mode ?? room.settings.mode ?? 'cabo',
+        mathSeconds: s.mathSeconds ?? room.settings.mathSeconds ?? 15,
+      };
       room.updated = now;
       return;
     }
@@ -421,6 +498,27 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
     const snap = room.snap;
     if (snap.playerId !== id) throw new Error('Someone else won the buzzer. Wait for their snap.');
     if (now >= snap.deadline) throw new Error('Your snap window has ended.');
+    if (snap.stage === 'math') {
+      if (action.type !== 'math-submit' || !snap.math || action.challengeId !== snap.math.id)
+        throw new Error('Submit the expression for your current Mathbo challenge.');
+      if (room.discard.at(-1)?.id !== snap.topId) throw new Error('The discard changed.');
+      const target = targetCard(room, snap.target!);
+      if (typeof action.expression === 'string' && !action.expression.trim()) {
+        failMathbo(room, id, now, 'The player chose to take a penalty.');
+        return;
+      }
+      try {
+        checkMathbo(action.expression, value(target.card), value(room.discard.at(-1)!));
+      } catch (error) {
+        failMathbo(room, id, now, error instanceof Error ? error.message : 'Invalid expression.');
+        return;
+      }
+      const equation = `${action.expression.trim().replaceAll('*', '×').replaceAll('/', '÷')} = ${snap.math.target}`;
+      delete snap.math;
+      completeSnap(room, id, target, now, true);
+      addLog(room, `${me.name} proved ${equation}.`, 'snap', now, undefined, equation);
+      return;
+    }
     if (action.type === 'give' && snap.stage === 'give') {
       giveCard(room, id, action.cardId, now);
       return;
@@ -435,6 +533,30 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
       throw new Error('You need a card to give when snapping another hand.');
     const top = room.discard.at(-1)!;
     if (top.id !== snap.topId) throw new Error('The discard changed.');
+    if (room.settings.mode === 'mathbo') {
+      snap.stage = 'math';
+      snap.target = action.target;
+      snap.deadline = now + (room.settings.mathSeconds ?? 15) * 1000;
+      snap.math = {
+        id: randomUUID(),
+        source: value(target.card),
+        target: value(top),
+        startedAt: now,
+      };
+      room.publicReveals[target.card.id] = snap.deadline;
+      room.players
+        .filter((p) => p.bot)
+        .forEach((p) => {
+          p.memory[target.card.id] = value(target.card);
+        });
+      addLog(
+        room,
+        `${me.name} revealed ${target.owner.name}’s card ${target.index + 1} for Mathbo. Make ${value(top)} using ${value(target.card)}.`,
+        'snap',
+        now,
+      );
+      return;
+    }
     if (target.card.rank !== top.rank) {
       room.publicReveals[target.card.id] = now + 5000;
       room.players
@@ -453,37 +575,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
       );
       return;
     }
-    if (other) {
-      snap.stage = 'give';
-      snap.target = action.target;
-      snap.deadline = now + SNAP_MS;
-      room.publicReveals[target.card.id] = snap.deadline;
-      addLog(
-        room,
-        `${me.name} found a match in ${target.owner.name}’s hand. Choose a card to give.`,
-        'snap',
-        now,
-      );
-    } else {
-      const hands = handSnapshot(target.owner);
-      room.discard.push(target.owner.cards.splice(target.index, 1)[0]);
-      addLog(room, `${me.name} snapped a ${top.rank}!`, 'snap', now, 'Card snapped');
-      releaseBuzzer(room, now);
-      moveCards(
-        room,
-        'snap',
-        [
-          {
-            card: target.card,
-            from: { zone: 'hand', playerId: id, index: target.index },
-            to: { zone: 'discard' },
-            faceUp: true,
-          },
-        ],
-        hands,
-        now,
-      );
-    }
+    completeSnap(room, id, target, now);
     return;
   }
   if (action.type === 'buzz') {
@@ -610,8 +702,11 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
   }
   if (room.stage === 'power-view' && action.type === 'finish-look') {
     room.privatePeek = null;
-    if (room.power?.swap) room.stage = 'power-swap';
-    else endTurn(room, now);
+    if (room.power?.swap) {
+      room.stage = 'power-swap';
+      lock(room, now, VIEW_RETURN_MS);
+      room.deadline += VIEW_RETURN_MS;
+    } else endTurn(room, now);
     room.updated = now;
     return;
   }
@@ -661,6 +756,25 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
   throw new Error('That move is not available right now.');
 }
 
+// Unknown cards use the same estimate as the bot's CABO decision. Never inspect
+// a hidden face to choose a swap, even when considering an opponent's cards.
+function botSwap(room: Room, p: Player) {
+  if (p.id === room.caboId) return;
+  const estimate = (c: Card) => p.memory[c.id] ?? 7;
+  const own = [...p.cards].sort((a, b) => estimate(b) - estimate(a))[0];
+  const other = room.players
+    .filter((o) => o.id !== p.id && o.id !== room.caboId)
+    .flatMap((o) => o.cards.map((card) => ({ playerId: o.id, card })))
+    .sort((a, b) => estimate(a.card) - estimate(b.card))[0];
+  if (!own || !other || estimate(own) <= estimate(other.card)) return;
+  return {
+    gain: estimate(own) - estimate(other.card),
+    targets: [
+      { playerId: p.id, cardId: own.id },
+      { playerId: other.playerId, cardId: other.card.id },
+    ],
+  };
+}
 function botAction(room: Room, now: number) {
   const p = current(room);
   // Computers remember only their opening peeks, draws, and power peeks.
@@ -678,12 +792,18 @@ function botAction(room: Room, now: number) {
     );
   } else if (room.stage === 'choose' && room.drawn) {
     const high = worst ? p.memory[worst.id] : 6;
-    if (p.cards.length && value(room.drawn) < high)
+    const power = powerFor(room.drawn);
+    const replacementGain = p.cards.length ? Math.max(0, high - value(room.drawn)) : 0;
+    if (power?.swap && (botSwap(room, p)?.gain ?? 0) > replacementGain)
+      act(room, p.id, { type: 'power' }, now);
+    else if (p.cards.length && value(room.drawn) < high)
       act(room, p.id, { type: 'replace', cardId: (worst || ownTarget).id }, now);
-    else if (powerFor(room.drawn)) act(room, p.id, { type: 'power' }, now);
+    else if (power) act(room, p.id, { type: 'power' }, now);
     else act(room, p.id, { type: 'discard' }, now);
   } else if (room.stage === 'power-look' && room.power) {
+    const seekOpponent = room.power.swap && worst && p.memory[worst.id] >= 7;
     const options = room.players
+      .filter((owner) => !room.power!.swap || owner.id !== room.caboId)
       .flatMap((owner) => owner.cards.map((card) => ({ playerId: owner.id, cardId: card.id })))
       .filter((t) =>
         room.power!.scope === 'own'
@@ -694,26 +814,18 @@ function botAction(room: Room, now: number) {
       )
       .sort(
         (a, b) =>
-          Number(p.memory[a.cardId] !== undefined) - Number(p.memory[b.cardId] !== undefined),
+          Number(p.memory[a.cardId] !== undefined) - Number(p.memory[b.cardId] !== undefined) ||
+          (seekOpponent
+            ? Number(a.playerId === p.id) - Number(b.playerId === p.id)
+            : Number(a.playerId !== p.id) - Number(b.playerId !== p.id)),
       );
     if (options.length >= room.power.count)
       act(room, p.id, { type: 'look', targets: options.slice(0, room.power.count) }, now);
     else act(room, p.id, { type: 'skip-look' }, now);
   } else if (room.stage === 'power-view') act(room, p.id, { type: 'finish-look' }, now);
   else if (room.stage === 'power-swap') {
-    const other = room.players
-      .filter((o) => o.id !== p.id && o.id !== room.caboId)
-      .flatMap((o) => o.cards.map((c) => ({ playerId: o.id, cardId: c.id })))
-      .find(
-        (t) => p.memory[t.cardId] !== undefined && worst && p.memory[t.cardId] < p.memory[worst.id],
-      );
-    if (other && worst)
-      act(
-        room,
-        p.id,
-        { type: 'swap', targets: [{ playerId: p.id, cardId: worst.id }, other] },
-        now,
-      );
+    const swap = botSwap(room, p);
+    if (swap) act(room, p.id, { type: 'swap', targets: swap.targets }, now);
     else act(room, p.id, { type: 'skip-swap' }, now);
   }
   // Make bot actions readable; every action has a visible beat.
@@ -734,9 +846,14 @@ export function tick(room: Room, now = Date.now()) {
     }
   }
   if (room.phase === 'peek' && now >= room.deadline) {
+    const returningCards = Object.values(room.initialChoices).some((ids) => ids.length > 0);
     room.phase = 'playing';
     room.initialChoices = {};
     beginTurn(room, now);
+    if (returningCards) {
+      lock(room, now, VIEW_RETURN_MS);
+      room.deadline += VIEW_RETURN_MS;
+    }
     addLog(room, `${current(room).name} goes first.`, 'info', now);
     return;
   }
@@ -750,14 +867,19 @@ export function tick(room: Room, now = Date.now()) {
     const snap = room.snap;
     if (now >= snap.deadline) {
       const owner = room.players.find((p) => p.id === snap.playerId)!;
-      if (snap.stage === 'give' && owner.cards.length)
+      if (snap.stage === 'math') failMathbo(room, owner.id, now, 'The expression timer expired.');
+      else if (snap.stage === 'give' && owner.cards.length)
         giveCard(room, owner.id, owner.cards[randomInt(owner.cards.length)].id, now);
       else snapPenalty(room, owner.id, now);
     } else {
       const owner = room.players.find((p) => p.id === snap.playerId)!;
       if (owner.bot && now >= snap.pausedAt + 1200 && snap.stage === 'choose') {
         const match = owner.cards.find(
-          (c) => owner.memory[c.id] !== undefined && c.rank === room.discard.at(-1)!.rank,
+          (c) =>
+            owner.memory[c.id] !== undefined &&
+            (room.settings.mode === 'mathbo'
+              ? !!simpleMathbo(owner.memory[c.id], value(room.discard.at(-1)!))
+              : c.rank === room.discard.at(-1)!.rank),
         );
         if (match)
           act(
@@ -766,6 +888,11 @@ export function tick(room: Room, now = Date.now()) {
             { type: 'snap', target: { playerId: owner.id, cardId: match.id } },
             now,
           );
+      }
+      if (owner.bot && snap.stage === 'math' && snap.math && now >= snap.math.startedAt + 1800) {
+        const expression = simpleMathbo(snap.math.source, snap.math.target);
+        if (expression)
+          act(room, owner.id, { type: 'math-submit', challengeId: snap.math.id, expression }, now);
       }
     }
     return;
@@ -805,7 +932,13 @@ export function tick(room: Room, now = Date.now()) {
       (p) =>
         p.bot &&
         room.snapAttempts[p.id] !== top.id &&
-        p.cards.some((c) => p.memory[c.id] !== undefined && c.rank === top.rank),
+        p.cards.some(
+          (c) =>
+            p.memory[c.id] !== undefined &&
+            (room.settings.mode === 'mathbo'
+              ? !!simpleMathbo(p.memory[c.id], value(top))
+              : c.rank === top.rank),
+        ),
     );
     if (snapper) {
       act(room, snapper.id, { type: 'buzz', topId: top.id }, now);

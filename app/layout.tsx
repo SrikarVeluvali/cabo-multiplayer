@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import './design.css';
 
 const club = localFont({
   src: [
@@ -13,7 +14,7 @@ const club = localFont({
   variable: '--club-font',
 });
 export const metadata: Metadata = {
-  title: 'Cabo — Cards, memory & a little nerve',
+  title: 'Cabo',
   description:
     'A private multiplayer Cabo table by Srikar Veluvali. Remember your cards, use their powers, and know when to call Cabo.',
 };

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
+import Image from 'next/image';
 import {
   ArrowRight,
   Check,
@@ -21,10 +22,10 @@ import {
 } from '@phosphor-icons/react';
 import { useCabo } from './use-cabo';
 import { useTableSounds } from './use-table-sounds';
-import Card from './card';
 import Rules from './rules';
 import Table from './table';
 import type { Action, PublicRoom } from '@/lib/types';
+import { deckArtwork } from '@/lib/card-art';
 
 export type OnAction = (action: Action) => Promise<void>;
 export function Avatar({
@@ -70,9 +71,26 @@ export default function Cabo() {
     localStorage.setItem('cabo-theme', light ? 'dark' : 'light');
     setLight(!light);
   };
+  useEffect(() => {
+    if (game.room?.phase !== 'lobby') return;
+    const timer = window.setTimeout(() => {
+      deckArtwork.forEach((src) => {
+        const image = new window.Image();
+        image.decoding = 'async';
+        image.fetchPriority = 'low';
+        image.src = src;
+        image.decode().catch(() => {});
+      });
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [game.room?.phase]);
   return (
     <MotionConfig reducedMotion="user">
-      <div className="cabo-app" data-theme={light ? 'light' : 'dark'}>
+      <div
+        className="cabo-app design-refresh"
+        data-theme={light ? 'light' : 'dark'}
+        data-screen={!game.room ? 'welcome' : game.room.phase === 'lobby' ? 'lobby' : 'table'}
+      >
         <header className="game-header">
           <div className="brand">
             <span className="brand-emblem">
@@ -82,7 +100,7 @@ export default function Cabo() {
               <strong>
                 cabo<span>.</span>
               </strong>
-              <small>BY SRIKAR VELUVALI</small>
+              <small>by Srikar Veluvali</small>
             </div>
           </div>
           <div className="header-center">
@@ -90,7 +108,7 @@ export default function Cabo() {
               <>
                 <span className="live-dot" />
                 <span>
-                  {game.room.phase === 'lobby' ? 'Private lounge' : `Round ${game.room.round}`}
+                  {game.room.phase === 'lobby' ? 'Waiting room' : `Round ${game.room.round}`}
                 </span>
                 <button className="room-code" onClick={copy} title="Copy invite link">
                   {game.room.code}
@@ -98,7 +116,7 @@ export default function Cabo() {
                 </button>
               </>
             ) : (
-              <span className="header-tagline">Cards, memory & a little nerve.</span>
+              <span className="header-tagline">A table for your friends.</span>
             )}
           </div>
           <div className="header-tools">
@@ -162,6 +180,12 @@ export default function Cabo() {
               now={game.now}
               onAction={game.action}
               onRules={() => setRules(true)}
+              muted={sound.muted}
+              onMute={sound.toggle}
+              light={light}
+              onTheme={changeTheme}
+              onCopy={copy}
+              copied={copied}
             />
           )}
         </main>
@@ -185,7 +209,7 @@ export default function Cabo() {
             </motion.div>
           )}
         </AnimatePresence>
-        {rules && <Rules onClose={() => setRules(false)} />}
+        {rules && <Rules mode={game.room?.settings.mode} onClose={() => setRules(false)} />}
       </div>
     </MotionConfig>
   );
@@ -223,47 +247,29 @@ function Welcome({
   return (
     <div className="welcome-screen">
       <section className="welcome-copy">
-        <span className="eyebrow">Your people. Your table.</span>
-        <h1>
-          Keep your cards close.
-          <br />
-          Your memory closer.
-        </h1>
-        <p>
-          Four face-down cards. A few well-timed powers.
-          <br className="desktop-break" /> And the nerve to call it before anyone else.
-        </p>
-        <div className="welcome-art" aria-hidden="true">
-          <span className="art-ring" />
-          <div className="art-card art-one">
-            <Card card={{ id: 'welcome-back' }} />
-          </div>
-          <div className="art-card art-two">
-            <Card card={{ id: 'welcome-queen', rank: 'Q', suit: 'clubs' }} />
-          </div>
-          <div className="art-card art-three">
-            <Card card={{ id: 'welcome-king', rank: 'K', suit: 'hearts' }} />
-          </div>
-          <span className="art-caption">A good hand is a well-remembered one.</span>
-        </div>
-        <div className="welcome-foot">
-          <span>
-            <Users />
-            2–6 players
-          </span>
-          <span>
-            <Spade />
-            One deck. Endless second guesses.
+        <Image
+          className="welcome-photo"
+          src="/art/table-evening.webp"
+          alt="Four engraved green playing cards on a felt table"
+          fill
+          sizes="(max-width: 760px) 100vw, 65vw"
+          preload
+        />
+        <div className="welcome-title">
+          <h1>Cabo.</h1>
+          <p>
+            Four hidden cards. Lowest score wins.
+            <br />
+            Your memory does the rest.
+          </p>
+          <span className="welcome-player-count">
+            <Users /> Play with 2–6 friends
           </span>
         </div>
       </section>
       <section className="entry-panel">
-        <div className="entry-top">
-          <Spade weight="fill" />
-          <span>Make yourself at home.</span>
-        </div>
-        <h2>Pull up a chair.</h2>
-        <p>Start a private table or find your friends.</p>
+        <h2>Let’s play.</h2>
+        <p>Make a table or join with a code.</p>
         <div className="segmented">
           <button className={!join ? 'selected' : ''} onClick={() => setJoin(false)}>
             Create a table
@@ -314,7 +320,7 @@ function Welcome({
           </button>
         </form>
         <div className="entry-divider">
-          <span>Just getting a feel for it?</span>
+          <span>or warm up first</span>
         </div>
         <button
           className="button secondary wide"
@@ -324,11 +330,11 @@ function Welcome({
           <Robot />
           Practice with computers
         </button>
-        <button className="text-button entry-rules" onClick={onRules}>
-          New to Cabo? Learn the rules
-          <ArrowRight />
+        <button className="button gold wide entry-rules" onClick={onRules}>
+          <Question />
+          Learn the rules
         </button>
-        <p className="entry-note">No accounts. No downloads. Just a room code.</p>
+        <p className="entry-note">No account needed. Your table stays private.</p>
       </section>
     </div>
   );
@@ -352,15 +358,19 @@ function Lobby({
   const waiting = room.players.some((p) => p.id !== room.hostId && !p.ready);
   const [panel, setPanel] = useState<'players' | 'settings'>('players');
   return (
-    <div className="lobby-screen blackjack-lobby" data-panel={panel}>
+    <div
+      className="lobby-screen blackjack-lobby"
+      data-panel={panel}
+      data-mode={room.settings.mode ?? 'cabo'}
+    >
       <div className="waiting-heading">
         <div>
           <h1>Your private table</h1>
-          <p>Send the invite. Save a seat for your people.</p>
+          <p>Share the code. Deal when everyone is ready.</p>
         </div>
         <span className="badge">
           <Spade weight="fill" />
-          Cabo · 2–6 players
+          {room.settings.mode === 'mathbo' ? 'Mathbo' : 'Cabo'} · 2–6 players
         </span>
       </div>
       <div className="lobby-tabs segmented">
@@ -383,8 +393,7 @@ function Lobby({
         <section className="guest-panel panel">
           <div className="panel-heading">
             <div>
-              <span className="eyebrow">The guest list</span>
-              <h2>Save a seat for your people.</h2>
+              <h2>Players</h2>
             </div>
             <span className="badge">
               <Users />
@@ -428,11 +437,7 @@ function Lobby({
                     {p.id === room.you && <small> (you)</small>}
                   </strong>
                   <span className="seat-subtitle">
-                    {p.wins
-                      ? `${p.wins} round${p.wins === 1 ? '' : 's'} won`
-                      : p.bot
-                        ? 'Here for a practice round'
-                        : 'Here for a good hand'}
+                    {p.wins ? `${p.wins} round${p.wins === 1 ? '' : 's'} won` : ''}
                   </span>
                 </motion.div>
               ))}
@@ -448,10 +453,10 @@ function Lobby({
             ))}
           </div>
           <div className="guest-invite">
-            <span>
-              <Spade weight="fill" />
-              Private table. Good company.
-            </span>
+            <div className="lobby-invite-code">
+              <span>Room code</span>
+              <strong>{room.code}</strong>
+            </div>
             <button className="button secondary" onClick={onCopy}>
               {copied ? <Check /> : <Copy />}
               {copied ? 'Invite copied' : 'Copy invite'}
@@ -461,13 +466,46 @@ function Lobby({
         <section className="settings-panel panel">
           <div className="panel-heading">
             <div>
-              <span className="eyebrow">Your house rules</span>
-              <h2>Set the table.</h2>
+              <h2>Table settings</h2>
             </div>
             <GearSix />
           </div>
-          <p className="panel-description">A little breathing room between every move.</p>
           <fieldset disabled={!host || busy}>
+            <label className={room.settings.mode !== 'mathbo' ? 'setting-wide' : undefined}>
+              Snap Rule
+              <select
+                value={room.settings.mode ?? 'cabo'}
+                onChange={(e) =>
+                  onAction({
+                    type: 'settings',
+                    settings: { ...room.settings, mode: e.target.value as 'cabo' | 'mathbo' },
+                  })
+                }
+              >
+                <option value="cabo">Matching ranks</option>
+                <option value="mathbo">Mathbo</option>
+              </select>
+            </label>
+            {room.settings.mode === 'mathbo' && (
+              <label>
+                Expression timer
+                <select
+                  value={room.settings.mathSeconds ?? 15}
+                  onChange={(e) =>
+                    onAction({
+                      type: 'settings',
+                      settings: { ...room.settings, mathSeconds: Number(e.target.value) },
+                    })
+                  }
+                >
+                  {[5, 8, 10, 15, 20, 30, 45, 60].map((n) => (
+                    <option key={n} value={n}>
+                      {n} seconds
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               Computer players
               <select
@@ -503,7 +541,7 @@ function Lobby({
                 ))}
               </select>
             </label>
-            <label>
+            <label className="setting-wide">
               Table pace
               <select
                 value={room.settings.pace}
@@ -520,8 +558,11 @@ function Lobby({
             </label>
           </fieldset>
           <div className="settings-note">
-            <EyeNote />
-            <p>Opening peeks always last 15 seconds. Each player chooses their own two cards.</p>
+            <p>
+              {room.settings.mode === 'mathbo'
+                ? `Mathbo snaps reveal the selected card. You have ${room.settings.mathSeconds ?? 15} seconds to make an equation matching the discard.`
+                : 'Opening peeks always last 15 seconds. Each player chooses their own two cards.'}
+            </p>
           </div>
         </section>
       </div>
@@ -571,12 +612,5 @@ function Lobby({
         )}
       </div>
     </div>
-  );
-}
-function EyeNote() {
-  return (
-    <span className="note-card">
-      2<span>/ 4</span>
-    </span>
   );
 }

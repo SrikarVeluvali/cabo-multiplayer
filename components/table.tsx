@@ -12,6 +12,14 @@ import {
   Check,
   Crown,
   Eye,
+  GearSix,
+  Copy,
+  Question,
+  SpeakerHigh,
+  SpeakerSlash,
+  Moon,
+  Sun,
+  DoorOpen,
   Hand,
   List,
   LockKey,
@@ -24,6 +32,8 @@ import Card from './card';
 import ReplacementMotion from './replacement-motion';
 import CardMotion from './card-motion';
 import TableAction from './table-action';
+import MathSnap from './math-snap';
+import ViewMotion, { useCardViews } from './view-motion';
 import { Avatar, type OnAction } from './cabo';
 import { useViewport } from './use-viewport';
 
@@ -34,12 +44,24 @@ export default function Table({
   now,
   onAction,
   onRules,
+  muted,
+  onMute,
+  light,
+  onTheme,
+  onCopy,
+  copied,
 }: {
   room: PublicRoom;
   busy: boolean;
   now: number;
   onAction: OnAction;
   onRules: () => void;
+  muted: boolean;
+  onMute: () => void;
+  light: boolean;
+  onTheme: () => void;
+  onCopy: () => void;
+  copied: boolean;
 }) {
   const [replace, setReplace] = useState(false),
     [selected, setSelected] = useState<Target[]>([]),
@@ -48,12 +70,29 @@ export default function Table({
     [seatPage, setSeatPage] = useState(0);
   const size = useViewport();
   const reduce = useReducedMotion();
+  const views = useCardViews(room, now, !!reduce);
+  const publicViews = views.filter((view) => view.viewerId === null);
+  const returningViews = views.some((view) => view.returningAt !== undefined);
+  const optionsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node))
+        optionsRef.current.open = false;
+    };
+    window.addEventListener('pointerdown', close);
+    return () => window.removeEventListener('pointerdown', close);
+  }, []);
   const replacement =
     !reduce && room.replacement && now < room.replacement.until ? room.replacement : null;
   const movement = !reduce && room.movement && now < room.movement.until ? room.movement : null;
   const movingIds = new Set(movement?.flights.map((f) => f.card.id) || []);
   const movementOwner = movement?.hands.find((h) => h.playerId !== room.you)?.playerId;
-  const focusOwner = replacement?.playerId || room.snap?.playerId || movementOwner;
+  const focusOwner =
+    replacement?.playerId ||
+    room.snap?.playerId ||
+    views.find((view) => view.viewerId === room.you)?.ownerId ||
+    views[0]?.viewerId ||
+    movementOwner;
   const capacity =
     size.height < 500
       ? 1
@@ -64,7 +103,7 @@ export default function Table({
           : 2
         : size.width < 850
           ? 2
-          : size.width < 1320
+          : size.width < 1500
             ? 3
             : 5;
   const current = room.players[room.turnIndex],
@@ -74,7 +113,7 @@ export default function Table({
     myTurn = current.id === room.you;
   const snap = room.snap,
     ownSnap = snap?.playerId === room.you;
-  const canAct = !busy && now >= room.availableAt;
+  const canAct = !busy && now >= room.availableAt && !returningViews;
   const ordinary = canAct && !snap;
   const powerSelection =
     myTurn &&
@@ -96,6 +135,19 @@ export default function Table({
         ? Math.floor(ordered.findIndex((p) => p.id === focusOwner) / capacity)
         : Math.min(seatPage, seatPages - 1);
   const shown = ordered.slice(page * capacity, (page + 1) * capacity);
+  const cardScale =
+    size.height < 500 || (size.width < 650 && size.height < 700)
+      ? 'compact'
+      : size.height >= 780 && size.width >= 1200 && shown.length <= 3
+        ? 'large'
+        : size.height >= 700 && size.width >= 950 && shown.length <= 4
+          ? 'medium'
+          : 'normal';
+  const cardWidth =
+    cardScale === 'compact' ? 36 : cardScale === 'large' ? 72 : cardScale === 'medium' ? 60 : 52;
+  const cardHeight =
+    cardScale === 'compact' ? 52 : cardScale === 'large' ? 105 : cardScale === 'medium' ? 87 : 74;
+  const cardGap = cardScale === 'large' ? 14 : cardScale === 'medium' ? 10 : 8;
   // A peek temporarily unmounts its hand card. Remember the first deal across
   // those remounts, including the beat before polling ends the opening phase.
   const knownIds = useRef(
@@ -135,14 +187,15 @@ export default function Table({
     (reveals.length ? Math.max(...reveals.map((r) => room.publicReveals[r.card.id])) : 0) ||
     (room.stage === 'power-view' && room.peekUntil ? room.peekUntil : room.deadline);
   const remaining = Math.max(0, Math.ceil((clockEnd - now) / 1000));
-  const looks = (room.looks || []).filter((l) => now < l.until);
-  const isPrivatelyLifted = (id: string) => looks.some((l) => l.cardIds.includes(id));
-  const isLifted = (id: string) => isPrivatelyLifted(id) || reveals.some((r) => r.card.id === id);
+  const isPrivatelyLifted = (id: string) =>
+    views.some((view) => view.viewerId !== null && view.card.id === id);
+  const isLifted = (id: string) => views.some((view) => view.card.id === id);
   function selectable(owner: string, cardId: string) {
     if (!canAct || results) return false;
     if (peek) return owner === room.you && me.peekCount < 2 && !isLifted(cardId);
     if (snap) {
       if (!ownSnap) return false;
+      if (snap.stage === 'math') return false;
       if (snap.stage === 'give') return owner === room.you;
       return (
         !isPrivatelyLifted(cardId) &&
@@ -202,17 +255,23 @@ export default function Table({
           : 'Remember them before they return to their slots.';
   } else if (snap) {
     title = ownSnap
-      ? snap.stage === 'give'
-        ? 'A match! Give one card.'
-        : 'You won the buzzer.'
+      ? snap.stage === 'math'
+        ? 'Make the Mathbo match.'
+        : snap.stage === 'give'
+          ? 'A match! Give one card.'
+          : 'You won the buzzer.'
       : `${room.players.find((p) => p.id === snap.playerId)?.name} won the buzzer.`;
     help = ownSnap
-      ? snap.stage === 'give'
-        ? 'Choose your card to give. It stays hidden.'
-        : 'Choose your card or a card in an unlocked opponent hand.'
-      : snap.stage === 'give'
-        ? 'Choosing a hidden card to give. Play is paused.'
-        : 'Eight seconds to choose. Play is paused.';
+      ? snap.stage === 'math'
+        ? 'Build an expression equal to the discard. Your card is public.'
+        : snap.stage === 'give'
+          ? 'Choose your card to give. It stays hidden.'
+          : 'Choose your card or a card in an unlocked opponent hand.'
+      : snap.stage === 'math'
+        ? `${room.players.find((p) => p.id === snap.playerId)?.name} is building an expression. Play is paused.`
+        : snap.stage === 'give'
+          ? 'Choosing a hidden card to give. Play is paused.'
+          : 'Eight seconds to choose. Play is paused.';
   } else if (reveals.length) {
     title = 'A card for everyone to see.';
     help = `${reveals[0].owner.name}’s card ${reveals[0].index + 1} returns to its slot after five seconds.`;
@@ -246,6 +305,10 @@ export default function Table({
     help = 'A moment to hit the snap buzzer.';
   }
 
+  if (returningViews && !results) {
+    title = 'Returning cards.';
+    help = 'Cards are travelling back to their original slots.';
+  }
   function hand(p: Person, own = false) {
     // Swaps keep the same slots. Install their final occupants while the
     // explicit flight hides them, so landing doesn't trigger another swap.
@@ -272,17 +335,16 @@ export default function Table({
             ? 185
             : 230;
     const overlap =
-      rows > 1 ? Math.max(0, (rows * 89 + (rows - 1) * 8 - maxHeight) / (rows - 1)) : 0;
+      rows > 1
+        ? Math.max(0, (rows * (cardHeight + 15) + (rows - 1) * cardGap - maxHeight) / (rows - 1))
+        : 0;
     const handStyle = {
       '--hand-columns': columns,
+      '--hand-gap': `${cardGap}px`,
       '--row-overlap': `${overlap}px`,
-      '--hand-step': `${Math.min(52, ((size.height < 500 ? (size.width - 100) / 3 : !own && size.width < 650 && size.height < 640 ? (size.width - 80) / 2 : size.width - 64) - (columns - 1) * 8) / columns)}px`,
+      '--hand-step': `${Math.min(cardWidth, ((size.height < 500 ? (size.width - 100) / 3 : size.width - 64) - (columns - 1) * cardGap) / columns)}px`,
     } as CSSProperties;
-    const looking = looks.find((l) => l.playerId === p.id);
-    const lifted =
-      looking?.cardIds
-        .flatMap((id) => room.players.flatMap((owner) => owner.cards).filter((c) => c.id === id))
-        .filter((c) => !reveals.some((r) => r.card.id === c.id)) || [];
+    const lifted = views.filter((view) => view.viewerId === p.id);
     return (
       <section
         key={p.id}
@@ -322,22 +384,24 @@ export default function Table({
             <Trophy className="winner-icon" weight="fill" />
           )}
         </div>
-        <motion.div layout={!movement} className="hand-cards" style={handStyle}>
+        <div className="hand-cards" style={handStyle}>
           {cards.map((c, i) => {
             const face =
               results || (!!room.publicReveals?.[c.id] && now < room.publicReveals[c.id]);
             return (
               <motion.div
-                layout="position"
+                layout={movingIds.has(c.id) ? false : 'position'}
+                layoutDependency={`${p.id}-${cards.map((card) => card.id).join(',')}-${cardScale}`}
                 transition={{ layout: { duration: reduce ? 0 : 0.7, ease: 'easeInOut' } }}
                 key={c.id}
                 className={`numbered-card ${replacement?.cardId === c.id || movingIds.has(c.id) ? 'replacement-hidden' : ''}`}
                 data-hand-slot={`${p.id}-${i}`}
+                data-card-id={c.id}
               >
                 {isLifted(c.id) ? (
                   <div
                     className="card-placeholder"
-                    aria-label={`${p.name}, card ${i + 1}, being peeked`}
+                    aria-label={`${p.name}, card ${i + 1}, ${isPrivatelyLifted(c.id) ? 'being peeked' : 'revealed at the center'}`}
                   >
                     <Eye />
                   </div>
@@ -345,8 +409,6 @@ export default function Table({
                   <Card
                     card={c}
                     visible={face}
-                    sharedLayout={!movingIds.has(c.id) && replacement?.cardId !== c.id}
-                    layoutScope={p.id}
                     dealIndex={
                       !movingIds.has(c.id) &&
                       replacement?.cardId !== c.id &&
@@ -379,24 +441,16 @@ export default function Table({
               No cards
             </div>
           )}
-        </motion.div>
+        </div>
         {!!lifted.length && (
           <div className={`peek-desk ${own ? 'your-peek' : ''}`}>
             <div className="peek-desk-cards">
-              {lifted.map((c) => (
-                <Card
-                  key={c.id}
-                  card={c}
-                  visible={own && !!c.rank}
-                  sharedLayout
-                  layoutScope={
-                    room.players.find((owner) => owner.cards.some((card) => card.id === c.id))?.id
-                  }
-                  label={
-                    own && c.rank
-                      ? `Private peek, ${c.rank} of ${c.suit}`
-                      : `${p.name} is privately peeking`
-                  }
+              {lifted.map((view) => (
+                <div
+                  key={view.id}
+                  className="view-desk-placeholder"
+                  data-view-desk={view.id}
+                  aria-hidden="true"
                 />
               ))}
             </div>
@@ -411,19 +465,31 @@ export default function Table({
   }
   return (
     <LayoutGroup id={`${room.code}-${room.round}`}>
-      <div className="table-screen" data-capacity={capacity}>
+      <div
+        className="table-screen"
+        data-capacity={capacity}
+        data-card-scale={cardScale}
+        data-cabo={!!room.caboId && !results}
+      >
         <div className="table-topline">
-          <span className="table-phase">
-            <span className="live-dot" />
-            {peek
-              ? 'Opening peek'
-              : results
-                ? 'Round complete'
-                : room.caboId
-                  ? 'Final lap'
-                  : 'At the table'}
-            <small>{room.players.length} players</small>
-          </span>
+          <div className="table-session">
+            <button className="table-room" onClick={onCopy} title="Copy invite link">
+              <Spade weight="fill" /> {room.code} {copied ? <Check /> : <Copy />}
+            </button>
+            <span className="table-phase">
+              {peek
+                ? 'Opening peek'
+                : results
+                  ? 'Round complete'
+                  : room.caboId
+                    ? 'Final lap'
+                    : `Round ${room.round}`}
+              <small>
+                {room.settings.mode === 'mathbo' ? 'Mathbo' : 'Matching ranks'} ·{' '}
+                {room.players.length} players
+              </small>
+            </span>
+          </div>
           <div className="table-top-actions">
             {seatPages > 1 && (
               <div className="seat-pager">
@@ -454,8 +520,56 @@ export default function Table({
             >
               <List />
             </button>
+            <details
+              ref={optionsRef}
+              className="table-options"
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.currentTarget.open = false;
+                  event.currentTarget.querySelector('summary')?.focus();
+                }
+              }}
+            >
+              <summary aria-label="Table options" title="Table options">
+                <GearSix />
+              </summary>
+              <div
+                className="table-options-menu"
+                onClick={() => {
+                  if (optionsRef.current) optionsRef.current.open = false;
+                }}
+              >
+                <button onClick={onMute} aria-label={muted ? 'Enable sounds' : 'Mute sounds'}>
+                  {muted ? <SpeakerSlash /> : <SpeakerHigh />}
+                  {muted ? 'Enable sounds' : 'Mute sounds'}
+                </button>
+                <button onClick={onTheme} aria-label={light ? 'Dark controls' : 'Light controls'}>
+                  {light ? <Moon /> : <Sun />}
+                  {light ? 'Dark controls' : 'Light controls'}
+                </button>
+                <button onClick={onRules} aria-label="Learn the rules">
+                  <Question />
+                  Learn the rules
+                </button>
+                <button onClick={onCopy} aria-label={copied ? 'Invite copied' : 'Copy invite'}>
+                  {copied ? <Check /> : <Copy />}
+                  {copied ? 'Invite copied' : 'Copy invite'}
+                </button>
+                {results && (
+                  <button
+                    className="leave-table-action"
+                    disabled={busy}
+                    onClick={() => onAction({ type: 'leave' })}
+                  >
+                    <DoorOpen />
+                    Leave table
+                  </button>
+                )}
+              </div>
+            </details>
           </div>
         </div>
+        <TableAction room={room} now={now} revealing={!!reveals.length} />
         {room.caboId && !results && (
           <div className="cabo-banner">
             <LockKey />
@@ -547,50 +661,82 @@ export default function Table({
             </div>
             {hand(me, true)}
             <div className="motion-reveal-anchor" data-reveal aria-hidden="true" />
-            {movement?.hands
-              .filter((h) => h.playerId !== room.you && !shown.some((p) => p.id === h.playerId))
-              .map((h, i) => (
+            {[
+              ...new Set([
+                ...(movement?.hands.map((h) => h.playerId) ?? []),
+                ...views.map((view) => view.ownerId),
+              ]),
+            ]
+              .filter((id) => id !== room.you && !shown.some((p) => p.id === id))
+              .map((id, i) => (
                 <div
                   className="motion-seat-anchor"
-                  data-motion-anchor={h.playerId}
-                  key={h.playerId}
+                  data-motion-anchor={id}
+                  key={id}
                   style={{ right: i ? 'auto' : 18, left: i ? 18 : 'auto' }}
                 >
-                  {room.players.find((p) => p.id === h.playerId)?.name}
+                  {room.players.find((p) => p.id === id)?.name}
                 </div>
               ))}
-            {!reveals.length && <TableAction room={room} now={now} />}
-            {movement && <CardMotion key={movement.id} movement={movement} now={now} />}
-            {replacement && (
-              <ReplacementMotion key={replacement.at} replacement={replacement} now={now} />
+            {movement && (
+              <CardMotion
+                key={movement.id}
+                movement={movement}
+                now={now}
+                width={cardWidth}
+                height={cardHeight}
+              />
             )}
-            {!!reveals.length && (
+            {replacement && (
+              <ReplacementMotion
+                key={replacement.at}
+                replacement={replacement}
+                now={now}
+                width={cardWidth}
+                height={cardHeight}
+              />
+            )}
+            {!!publicViews.length && (
               <div className="public-reveal">
                 <div className="peek-desk-cards">
-                  {reveals.map((r) => (
-                    <div key={r.card.id} data-public-card={r.card.id}>
-                      <Card
-                        card={r.card}
-                        sharedLayout
-                        layoutScope={r.owner.id}
-                        onClick={
-                          selectable(r.owner.id, r.card.id)
-                            ? () => choose({ playerId: r.owner.id, cardId: r.card.id })
-                            : undefined
-                        }
+                  {publicViews.map((view) => (
+                    <div key={view.id} data-public-card={view.card.id}>
+                      <div
+                        className="view-desk-placeholder"
+                        data-view-desk={view.id}
+                        aria-hidden="true"
                       />
                       <span>
-                        {r.owner.name} · card {r.index + 1}
+                        {room.players.find((p) => p.id === view.ownerId)?.name} · card{' '}
+                        {(room.players
+                          .find((p) => p.id === view.ownerId)
+                          ?.cards.findIndex((c) => c.id === view.card.id) ?? 0) + 1}
                       </span>
                     </div>
                   ))}
                 </div>
                 <p>
                   <Eye />
-                  Visible to everyone
+                  {snap?.stage === 'math'
+                    ? `Mathbo · ${remaining}s to make the match`
+                    : snap?.stage === 'give' && room.settings.mode === 'mathbo'
+                      ? 'Mathbo solved · choosing a gift'
+                      : room.events.at(-1)?.announcement === 'Mathbo missed'
+                        ? 'Mathbo missed · one hidden penalty'
+                        : 'Visible to everyone'}
                 </p>
               </div>
             )}
+            {views
+              .filter(
+                (view) =>
+                  view.viewerId === null ||
+                  view.viewerId === room.you ||
+                  shown.some((p) => p.id === view.viewerId),
+              )
+              .map((view) => (
+                <ViewMotion key={view.id} view={view} now={now} you={room.you} reduced={!!reduce} />
+              ))}
           </div>
         </div>
         <div className={`action-dock ${snap ? 'snap-active' : ''}`}>
@@ -652,9 +798,11 @@ export default function Table({
               <span className="buzzer-owner">
                 <BellRinging />
                 {ownSnap
-                  ? snap.stage === 'give'
-                    ? 'Choose your gift card'
-                    : 'Choose a card on the table'
+                  ? snap.stage === 'math'
+                    ? 'Solve the expression'
+                    : snap.stage === 'give'
+                      ? 'Choose your gift card'
+                      : 'Choose a card on the table'
                   : 'Buzzer reserved'}
                 <b>{remaining}s</b>
               </span>
@@ -791,6 +939,9 @@ export default function Table({
           />
         )}
         {activity && <Activity room={room} onClose={() => setActivity(false)} />}
+        {ownSnap && snap?.stage === 'math' && snap.math && (
+          <MathSnap key={snap.math.id} room={room} now={now} busy={busy} onAction={onAction} />
+        )}
       </div>
     </LayoutGroup>
   );

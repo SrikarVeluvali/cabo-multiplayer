@@ -77,6 +77,8 @@ test('opening peek is exactly 15 seconds after dealing, limited to two chosen ow
   tick(room, room.deadline);
   assert.equal(room.phase, 'playing');
   assert.deepEqual(room.initialChoices, {});
+  assert.equal(room.availableAt, start + 18000);
+  assert.throws(() => act(room, id, { type: 'draw' }, start + 17500), /settle/);
 });
 test('public snapshots never expose tokens, deck, memory, opponent cards, or private draws', () => {
   const { room, id, guest, now } = playing();
@@ -172,7 +174,8 @@ test('queen look and swap are independent; hide is enforced before swapping', ()
       .players.flatMap((p) => p.cards)
       .every((c) => !c.rank),
   );
-  act(room, id, { type: 'skip-swap' }, now + 3200);
+  assert.throws(() => act(room, id, { type: 'swap', targets: [a, b] }, now + 3200), /settle/);
+  act(room, id, { type: 'skip-swap' }, now + 4100);
   assert.equal(room.stage, 'between');
 });
 test('black king looks at two distinct cards anywhere and may skip the look but swap', () => {
@@ -366,6 +369,88 @@ test('leaving from results keeps the selected seat index valid and transfers hos
   assert.equal(room.players.length, 2);
   assert.ok(room.winnerNames.length);
 });
+function botSwapFixture() {
+  const f = playing();
+  const bot = f.room.players[0];
+  bot.bot = true;
+  bot.cards = [card('Q'), card('2'), card('5'), card('6')];
+  bot.memory = { [bot.cards[0].id]: 12, [bot.cards[1].id]: 2 };
+  f.room.players[1].cards = [card('3'), card('4'), card('5'), card('6')];
+  f.room.snapAttempts[bot.id] = f.room.discard.at(-1)!.id;
+  f.room.stage = 'power-swap';
+  f.room.power = powerFor(card('J'));
+  return { ...f, bot };
+}
+
+test('bots blind-swap a remembered high card for an unknown opponent card', () => {
+  const { room, bot, now } = botSwapFixture();
+  const high = bot.cards[0];
+  const other = room.players[1].cards[0];
+  tick(room, now);
+  assert.equal(bot.cards[0].id, other.id);
+  assert.equal(room.players[1].cards[0].id, high.id);
+  assert.equal(room.movement?.kind, 'swap');
+});
+
+test('bots can swap an unknown own card for a remembered low opponent card', () => {
+  const { room, bot, now } = botSwapFixture();
+  bot.memory[bot.cards[0].id] = 1;
+  const own = bot.cards[2];
+  const other = room.players[1].cards[2];
+  bot.memory[other.id] = 3;
+  tick(room, now);
+  assert.equal(bot.cards[2].id, other.id);
+  assert.equal(room.players[1].cards[2].id, own.id);
+});
+
+test('bots prefer the best remembered swap and never inspect hidden faces to decide', () => {
+  for (const hiddenRank of ['A', 'K'] as const) {
+    const { room, bot, now } = botSwapFixture();
+    room.players[1].cards[0].rank = hiddenRank;
+    const best = room.players[1].cards[2];
+    bot.memory[best.id] = 2;
+    bot.memory[room.players[1].cards[1].id] = 5;
+    tick(room, now);
+    assert.equal(bot.cards[0].id, best.id);
+  }
+});
+
+test('bots skip unhelpful swaps and cannot trade with the CABO caller', () => {
+  const { room, bot, now } = botSwapFixture();
+  bot.cards.forEach((c) => (bot.memory[c.id] = 2));
+  tick(room, now);
+  assert.equal(room.events.at(-1)?.announcement, 'Swap skipped');
+  const locked = botSwapFixture();
+  locked.room.caboId = locked.guest;
+  locked.bot.memory[locked.room.players[1].cards[0].id] = -1;
+  tick(locked.room, locked.now);
+  assert.equal(locked.room.events.at(-1)?.announcement, 'Swap skipped');
+});
+
+for (const rank of ['J', 'Q', 'K'] as const) {
+  test(`a bot uses ${rank}'s swap power instead of a less valuable replacement`, () => {
+    const { room, bot, now } = botSwapFixture();
+    bot.cards[0].rank = 'K';
+    bot.memory[bot.cards[0].id] = 13;
+    held(room, card(rank, 'spades'), now);
+    tick(room, now);
+    assert.equal(room.events.at(-1)?.announcement, 'Power played');
+    assert.equal(room.stage, rank === 'J' ? 'power-swap' : 'power-look');
+    room.snapAttempts[bot.id] = room.discard.at(-1)!.id;
+    let swapAt = room.availableAt;
+    if (rank !== 'J') {
+      tick(room, room.availableAt);
+      assert.equal(room.privatePeek?.cardIds[0], room.players[1].cards[0].id);
+      assert.equal(room.privatePeek?.cardIds.length, rank === 'K' ? 2 : 1);
+      tick(room, room.privatePeek!.until);
+      swapAt = room.availableAt;
+    }
+    tick(room, swapAt);
+    assert.equal(room.events.at(-1)?.announcement, 'Cards swapped');
+    assert.equal(room.movement?.kind, 'swap');
+  });
+}
+
 test('computer rounds finish and preserve all 52 physical cards through moves and swaps', () => {
   for (let run = 0; run < 5; run++) {
     const { room } = playing(4);

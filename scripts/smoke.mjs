@@ -48,6 +48,7 @@ await pause(Math.max(0, room.deadline - Date.now() + 80));
 room = await read(code, host.token);
 assert.equal(room.phase, 'playing');
 assert.ok(room.players.flatMap((p) => p.cards).every((c) => !c.rank));
+await pause(Math.max(0, room.availableAt - Date.now() + 80));
 // Race two independent seats: precisely one reservation must commit.
 const contenders = [host.room.you, guest.room.you];
 const race = await Promise.allSettled(

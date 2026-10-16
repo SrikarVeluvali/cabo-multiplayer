@@ -3,7 +3,12 @@ export type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 
 export type Card = { id: string; rank: Rank; suit: Suit };
 export type TableCard = { id: string; rank?: Rank; suit?: Suit };
 export type Target = { playerId: string; cardId: string };
-export type Settings = { turnSeconds: number; pace: 'relaxed' | 'quick' };
+export type Settings = {
+  turnSeconds: number;
+  pace: 'relaxed' | 'quick';
+  mode?: 'cabo' | 'mathbo';
+  mathSeconds?: number;
+};
 export type Player = {
   id: string;
   name: string;
@@ -22,8 +27,9 @@ export type Snap = {
   topId: string;
   deadline: number;
   pausedAt: number;
-  stage: 'choose' | 'give';
+  stage: 'choose' | 'math' | 'give';
   target?: Target;
+  math?: { id: string; source: number; target: number; startedAt: number };
 };
 export type GameEvent = {
   id: string;
@@ -31,6 +37,7 @@ export type GameEvent = {
   at: number;
   kind: 'info' | 'draw' | 'discard' | 'swap' | 'snap' | 'penalty' | 'cabo';
   announcement?: string;
+  equation?: string;
 };
 export type Replacement = {
   playerId: string;
@@ -139,4 +146,5 @@ export type Action =
   | { type: 'swap'; targets: Target[] }
   | { type: 'buzz'; topId: string }
   | { type: 'snap'; target: Target }
-  | { type: 'give'; cardId: string };
+  | { type: 'give'; cardId: string }
+  | { type: 'math-submit'; challengeId: string; expression: string };

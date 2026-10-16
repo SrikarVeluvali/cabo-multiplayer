@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
+    "prepare:cards": "node scripts/prepare-cards.mjs",
     "test:integration": "node scripts/smoke.mjs",
+    "test:mathbo": "node scripts/mathbo-smoke.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

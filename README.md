@@ -2,47 +2,49 @@
 
 **Four cards. Two peeks. Trust your memory.**
 
-A private multiplayer card game by **Srikar Veluvali**. Play with friends in the browser, or practice against computers. Built with Next.js, React, TypeScript, and Motion.
+A private multiplayer card game by **Srikar Veluvali**. Remember hidden cards, use powers, race the snap buzzer, and call CABO when you think your total is lowest. Play with friends or practice against computers.
 
-### [Play Cabo →](https://cabo-multiplayer.vercel.app/)
+[Play Cabo](https://cabo-multiplayer.vercel.app/) · [Rules](#how-to-play) · [Mathbo](#mathbo) · [Run locally](#run-locally)
 
-No accounts or downloads. Create a table and share the invite link or six-character room code.
+The screenshots below show the current source version. The hosted link runs the last deployed release; local changes appear there after deployment.
 
-![Cabo table with face-down hands, a private draw, and turn controls](docs/screenshots/table-desktop.png)
+![Cabo welcome screen with custom table artwork and create, join, practice, and rules controls](docs/screenshots/welcome.jpg)
 
-## Bring your people
+## A table for your friends
 
-1. Open [Cabo](https://cabo-multiplayer.vercel.app/) and enter your name.
-2. **Create a table**, then **Copy invite** to invite friends. Guests can also choose **Join friends** and enter the room code.
-3. Choose the turn limit, table pace, and optional computer opponents. Each guest marks themselves ready; the host starts the game.
-4. Pick two cards to remember, keep track of the table, and call CABO when you think you have the lowest total.
+1. Enter your name and **Create a table**, or choose **Join friends** with a six-character room code.
+2. **Copy invite** to share the table. There are **2–6 seats**, including up to **three computers**. **Practice with computers** creates a table with two opponents.
+3. In the waiting room, choose **Snap Rule → Matching ranks or Mathbo**, the turn timer, and table pace. Mathbo adds an expression timer.
+4. Guests mark themselves ready. The host starts the game.
 
-There are **2–6 seats**, including up to **three computers**. **Practice with computers** opens a table with two opponents immediately.
+![Waiting room with seats, invitations, Mathbo settings, and a red Leave table button](docs/screenshots/waiting-room.jpg)
 
-![The private waiting room with guest seats, invite controls, and house settings](docs/screenshots/waiting-room.png)
+## Made for playing
 
-## At the table
+The live table fills the screen with the cards and controls. Action notices have their own strip above the hands, leaving the piles clear. Open the scrollable **Table activity** log to follow earlier moves, or **Table options** for sound, theme, rules, and leaving.
 
-- Cards visibly travel between their slots, the private peek desk, the draw deck, and the discard pile.
-- Gold action notices identify plays, discards, replacements, swaps, and skipped powers.
-- The snap buzzer belongs to the first player whose press reaches the server. Their nameplate pulses red while they choose.
-- Hands stay centered as cards leave or penalty cards arrive. Larger hands wrap into rows.
-- Dark and light themes, optional sound effects with a remembered mute setting, keyboard focus, and reduced-motion support are included.
-- On small screens, player pages follow the action. Settings and the activity log remain accessible without page scrolling.
+- Cards travel visibly when drawn, replaced, discarded, swapped, snapped, or given to another player.
+- Private peeks travel to the acting player's desk and return to their original numbered slots. Other players see only the backs.
+- The buzzer holder's nameplate flashes red. Public reveals preserve the card's original colors.
+- Hands stay centered as cards leave. Penalty cards wrap neatly into additional rows.
+- Dark and light themes, optional synthesized sounds, keyboard focus, and reduced-motion support are included.
+- Phone layouts fit the viewport. On small screens with more opponents, player pages follow the relevant action.
 
-![A gold action notice explains a skipped swap in the middle of the board](docs/screenshots/action-notice.png)
+![Desktop table with the draw, discard, private drawn card, and turn controls](docs/screenshots/table-desktop.jpg)
 
-<img src="docs/screenshots/table-mobile.png" alt="Cabo on a phone, with readable cards and touch controls" width="320" />
+<img src="docs/screenshots/table-mobile.jpg" alt="Phone table during a private spy peek, with all controls inside the screen" width="300" />
 
-## Rules
+## How to play
 
-These are the house rules implemented in this game. The **How to play** panel includes them too.
+These are the house rules implemented by this game. **Learn the rules** opens eight interactive lessons: try opening peeks, replay replacements and powers, test Mathbo expressions, and compare snap and CABO outcomes without affecting a live table.
 
-### Setup and scoring
+![Interactive rules guide with two chosen practice cards](docs/screenshots/rules-walkthrough.jpg)
 
-Use one shuffled **52-card deck**, without jokers. Every player receives **four face-down cards**. After the animated deal, everyone has **15 seconds** to choose up to **two of their own cards** to look at. Chosen cards stay visible for the rest of that opening window, then return face down. Unused peeks expire.
+### Deal and scoring
 
-The goal is the **lowest total**:
+Use one shuffled **52-card deck**, without jokers. Each player receives **four face-down cards**. After the deal finishes, everyone has **15 seconds** to choose any **two of their own cards** to remember. Those cards remain at their private desk until the window ends, then return face down. Unused peeks expire.
+
+Your goal is the **lowest sum**:
 
 | Card    |     Points |
 | ------- | ---------: |
@@ -55,15 +57,15 @@ The goal is the **lowest total**:
 
 An empty hand totals **zero**. Emptying your hand does not end the round automatically.
 
-### Your turn
+### On your turn
 
-Before drawing, you may **call CABO**. Otherwise, draw one card privately from the deck and choose one of three actions:
+Before drawing, you may **call CABO**. Otherwise, draw one card privately from the deck, then:
 
-- **Discard** the drawn card.
-- **Replace** one of your face-down cards with it. The old card goes face up onto the discard pile.
+- **Discard** it onto the discard pile.
+- **Replace** one of your hidden cards with it. The old card goes face up onto the discard pile.
 - **Play its power**, discarding the drawn card as you do so.
 
-You cannot draw from the discard pile. Only a freshly drawn card can activate a power; snapping or replacing a card does not activate its power.
+You cannot draw from the discard pile. Only a freshly drawn card activates a power; replacing or snapping a card does not activate its power.
 
 ### Card powers
 
@@ -71,46 +73,84 @@ You cannot draw from the discard pile. Only a freshly drawn card can activate a 
 | ---------- | ------------------------------------------------------------------------------------ |
 | 7 or 8     | Look at one of your own cards.                                                       |
 | 9 or 10    | Look at one opponent card.                                                           |
-| J          | Optionally blind-swap any two different cards on the table.                          |
+| J          | Optionally blind-swap any two different cards.                                       |
 | Q          | Optionally look at one card anywhere, then optionally swap any two cards.            |
 | Black K    | Optionally look at two different cards anywhere, then optionally swap any two cards. |
 | Red K      | No played power. Keep it for its −1 score.                                           |
 
-Looking and swapping are **separate choices**. With Q or black K, you can look and skip the swap, or skip looking and still swap. The cards you swap do not need to be the cards you looked at. Two cards in the same hand may be swapped.
+Looking and swapping are **separate choices**. With Q or black K, you can look and skip the swap, or skip looking and still swap. The swapped cards need not be the cards you looked at. Two cards in the same hand may be swapped.
 
-Power peeks last up to **five seconds**. Cards move to the acting player's desk and return to their original slots. Only that player receives the card faces; everyone else sees the backs. A CABO caller's hand can be looked at, but cannot participate in a swap.
+Power peeks last up to **five seconds**. Only the acting player receives the faces. Cards turn back over and travel to their original slots before another swap or turn proceeds. A CABO caller's cards can be looked at, but cannot be swapped.
 
-### Snap buzzer
+![A black king power showing two cards at the acting player's private desk](docs/screenshots/private-peek.jpg)
 
-Remember a card that matches the **rank** of the top discard? Hit **Snap buzzer**, even out of turn.
+### Snap buzzer: Matching ranks
 
-The first accepted press reserves the table for **eight seconds**. Other actions and the ordinary turn clock pause while that player chooses. Each player gets one attempt per top discard. All kings match each other, regardless of color or suit.
+Remember a card matching the **rank** of the top discard? Hit **Snap buzzer**, even out of turn. All kings match, regardless of color or suit.
 
-**Snap your own card:** a correct match moves it onto the discard pile and reduces your hand by one card.
+The first press accepted by the server reserves the table for **eight seconds**. The holder chooses a card while the ordinary turn clock pauses. Each player gets one attempt per top discard. A stale click after the discard changes is rejected without a penalty.
 
-**Snap an opponent's card:** a correct match is revealed to the table. You then have another eight seconds to choose one of your own cards to give them, face down. Their matched card goes onto the discard; your gift fills its original slot. If the gift timer expires, the game chooses one of your cards at random. You need a card in your hand to offer an opponent snap.
+**Your own card:** a correct snap moves it onto the discard pile, reducing your hand by one.
 
-**An incorrect snap:** the attempted card stays with its owner and is revealed publicly for **exactly five seconds**. Only the snapper receives **one random, unseen penalty card**. Missing the initial eight-second selection window also gives a penalty card.
+**An opponent's card:** a correct snap reveals it publicly. You then have **eight more seconds** to choose one of your own cards to give them face down. Their matched card goes onto the discard; your gift fills its original slot. If you do not choose a gift in time, the game picks one of your cards at random. You need a card in your hand to offer an opponent snap.
 
-CABO hands are locked against opponent snaps and transfers. The caller may still snap their own cards. A stale click on a changed discard is rejected without a penalty.
+**Wrong snap:** the attempted card stays with its owner and is revealed to everyone for **five seconds**. Only the snapper receives **one random, unseen penalty card**. Missing the initial selection deadline also gives a penalty card.
 
-![An opponent's matching card revealed with its original red suit colors](docs/screenshots/opponent-snap.png)
+CABO hands are locked against opponent snaps and transfers. The caller may still snap their own cards.
 
 ### Calling CABO and winning
 
-Call CABO **at the start of your turn, before drawing**. Calling uses that turn and locks your hand against swaps and opponent-snap transfers. Every other player gets **exactly one final turn**, followed by the last snap window. Then all hands are revealed.
+Call CABO **at the start of your turn, before drawing**. Calling uses that turn and locks your hand against swaps and opponent-snap transfers. Every other player receives **exactly one final turn**, followed by the last snap window. Then all hands are revealed.
 
-- The caller wins only if their total is **strictly lower** than everyone else's.
+- The caller wins only with a total **strictly below** every other player.
 - If the caller is tied or beaten, all **other players with the actual lowest total** win together.
 - Round wins carry into rematches. The first player rotates each round.
 
-If the **draw deck runs out before anyone calls CABO**, the last draw and any power finish, the cards settle, and the lowest total wins. Ties share the win. After CABO, older discards may be reshuffled to finish the promised final turns; the top discard stays in place. If no card is available for a required draw or penalty, the round ends with scoring.
+If the **draw deck runs out before CABO**, the last draw and any power finish, cards settle, and the lowest total wins. Ties share the win. After CABO, older discards may be reshuffled to finish the promised final turns; the top discard stays in place. If no card is available for a required draw or penalty, the round ends with scoring.
 
-### Pace, timeouts, and reconnecting
+### Timers and reconnecting
 
-The host chooses a **30, 45, 60, or 90-second turn limit**. A timeout discards any held draw without activating its power and passes the turn. Cards settle before another action is accepted. Between turns, the buzzer window lasts **three seconds** in relaxed mode or **1.8 seconds** in quick mode; resolving a snap restarts it.
+The host chooses a **30, 45, 60, or 90-second turn limit**. A timeout discards a held draw without playing its power and passes the turn. Between turns, the snap window lasts **three seconds** at relaxed pace or **1.8 seconds** at quick pace; resolving a snap restarts it. Actions wait for cards to settle.
 
-Refresh the same tab to reconnect to your seat. Closing it keeps the seat in the game, with turns advancing through timeouts. An active human can inherit hosting after the host has been absent for a minute. The host can start a rematch or return everyone to the lounge after scoring.
+Refresh the same tab to reconnect. Closing it leaves the seat in the round, with turns advancing through timeouts. An active human can inherit hosting after the host has been absent for a minute. After scoring, the host can start a rematch or return everyone to the waiting room.
+
+## Mathbo
+
+Choose **Mathbo** under **Snap Rule** in the waiting room. All other Cabo rules remain the same. The host selects an expression timer of **5, 8, 10, 15, 20, 30, 45, or 60 seconds**.
+
+1. Win the normal snap buzzer and choose your card or an unlocked opponent card.
+2. The selected card is revealed to everyone. Use its **Cabo score** to make an expression on the left equal the top discard's score on the right. Red kings count as **−1**.
+3. Tap the boxed numbers and operations, or type. Functions wrap the current expression; `nCr` and `nPr` prepare a second argument. The editor previews the result.
+4. **Submit snap** before the timer ends. A correct equation completes your own snap or begins the hidden-gift step for an opponent snap. The exact equation appears in the action notice for **one second** and stays in the activity log.
+5. An invalid submission, **Take penalty**, or a timeout gives the snapper one hidden penalty card. The attempted card stays in place and remains public for five more seconds.
+
+![Mathbo's clickable keypad with a valid card-based expression and countdown](docs/screenshots/mathbo.jpg)
+
+### Expression rules
+
+The selected number must occur in the expression. Other numeric constants are allowed, with these restrictions:
+
+- **Both sides of every addition or subtraction must contain the selected card number.** This also applies to nested additions/subtractions.
+- **Zero exponents are forbidden**, including calculated zeros such as `6^(6−6)`.
+- **Cancelling the card into an identity to preserve a free answer is forbidden.** You cannot solve a target of 9 with `(6/6)×9`, `9/(6/6)`, `(6×9)/6`, or `9^(6/6)`. Nested functions are checked too.
+
+| Selected card → discard | Expression    | Accepted?                            |
+| ----------------------- | ------------- | ------------------------------------ |
+| 6 → 9                   | `6 + (6 / 2)` | Yes: both addition terms use 6.      |
+| 6 → 9                   | `6 + 3`       | No: the right term is a free number. |
+| 6 → 13                  | `6 + (6 + 1)` | No: the inner addition has a free 1. |
+| 4 → 8                   | `4 × 2`       | Yes.                                 |
+| 8 → 3                   | `log2(8)`     | Yes.                                 |
+| 9 → 3                   | `9^0.5`       | Yes.                                 |
+| 2 → 2                   | `2`           | Yes: no operation is required.       |
+| 6 → 9                   | `6^0 × 9`     | No: zero exponent.                   |
+| 6 → 9                   | `(6 / 6) × 9` | No: cancellation padding.            |
+
+A card-derived 1 may be the answer itself (`6/6 = 1`), or a term in a valid card-based sum (`6 + 6/6 = 7`). A literal Ace or red king keeps its normal value of 1 or −1.
+
+Supported operations are `×`, `÷`, powers (`^`), factorial (`!`), `log2`, `log10`, `sqrt`, `abs`, parentheses, `nCr(n,r)`, and `nPr(n,r)`, plus the restricted `+` and `−`. Expressions have a **160-character limit** and must produce finite real values with intermediate magnitudes no greater than one trillion. Division by zero and invalid factorial/combinatoric arguments fail. The server parses expressions independently of the editor, without evaluating JavaScript.
+
+![An opponent Mathbo snap keeps the revealed card's original red suit while the snapper chooses a hidden gift](docs/screenshots/opponent-snap.jpg)
 
 ## Run locally
 
@@ -118,46 +158,44 @@ Use **Node.js 22** and npm:
 
 ```sh
 npm ci
-npm run dev
+npm run dev -- --port 3011
 ```
 
-Open [localhost:3000](http://localhost:3000). For another human seat, use a fresh browser tab at the base URL. Duplicating an existing tab may copy its seat session. Friends on your LAN can use your machine's LAN address and port if the firewall permits it.
+Open [localhost:3011](http://localhost:3011/). `npm run dev` alone uses port 3000. To test another human seat, open a fresh browser tab at the base URL; duplicating a tab may copy its seat session. Friends on your LAN can use your machine's LAN address and port if the firewall permits it.
 
-Without Redis credentials, one Node.js process stores room snapshots in `.data/rooms/`. For a persistent server:
+Without Redis credentials, a single Node.js process stores snapshots in `.data/rooms/`. This fallback needs a persistent writable disk and does not coordinate multiple server processes. For a production build on your own server:
 
 ```sh
 npm run build
 npm start
 ```
 
-The server listens on `0.0.0.0:3000`; use `PORT` to change the port. The file fallback needs a persistent writable disk and does not coordinate writes across multiple processes.
+The server listens on `0.0.0.0:3000`; use `PORT` to change it.
 
-## Deploy on Vercel
+### Multiplayer and storage
 
-The live game is [cabo-multiplayer.vercel.app](https://cabo-multiplayer.vercel.app/). Its private GitHub repository is connected to Vercel; pushes to `main` deploy automatically. Functions run in **Mumbai (`bom1`)**, with shared Redis storage following the companion BlackJack game's setup.
+The Next.js API owns the deck, legal moves, timers, random draws, scoring, and card visibility. Each room is an expiring JSON snapshot. Atomic Redis compare-and-set writes retry collisions, so two simultaneous buzzers cannot both claim a table.
+
+Visible clients poll about every **650 ms**, background tabs every **three seconds**. Requests advance timers and computer turns; there is no separate socket server or worker. If everyone closes the game, the next request resumes processing. Polling consumes Redis provider requests.
+
+Snapshots exclude the deck, credentials, computer memories, and unauthorized card faces. Cards have opaque UUIDs; seat credentials live in session storage. Private draws and peeks go only to their authorized seat. Computers use remembered cards, draws, public reveals, and their own powers to choose moves.
+
+### Deploy on Vercel
+
+The existing site is [cabo-multiplayer.vercel.app](https://cabo-multiplayer.vercel.app/). Its repository is connected to Vercel, with pushes to `main` deploying automatically. Functions run in **Mumbai (`bom1`)** with shared Redis, following the companion BlackJack setup.
 
 For another installation:
 
-1. Import the repository as a **Next.js** project. Node.js 22 and the build/install commands are configured in the repository.
-2. Connect an Upstash Redis database near your function region. Configure **Production**, **Preview**, and **Development** as needed.
-3. Set either `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Use a **REST write token**. A raw `REDIS_URL` alone is insufficient.
-4. Deploy, and redeploy after changing environment variables. Keep the production site accessible to your players.
+1. Import as a **Next.js** project with **Node.js 22**. Build/install commands and function region are in `vercel.json`.
+2. Connect an Upstash Redis database near the function region.
+3. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or `KV_REST_API_URL` and `KV_REST_API_TOKEN`, for the intended environments. Use a REST **write token**; `REDIS_URL` alone is insufficient.
+4. Deploy. Redeploy after changing environment variables.
 
-See [.env.example](.env.example). Keep credentials server-side, without a `NEXT_PUBLIC_` prefix, and never commit `.env.local`.
+See [.env.example](.env.example). Credentials stay server-side; never use `NEXT_PUBLIC_` for them or commit `.env.local`.
 
-Redis keys default to `cabo:<VERCEL_ENV or development>:room:`. This separates Cabo from BlackJack and separates production from preview/development. Set `ROOM_STORE_PREFIX` for additional isolation, such as separate preview branches. Rooms expire after **24 hours without game activity**; unchanged polls do not extend their lifetime. Expired local files are rejected but are not automatically removed from disk.
+Keys default to `cabo:<VERCEL_ENV or development>:room:`, separating Cabo from BlackJack and separating environments. Override `ROOM_STORE_PREFIX` for additional isolation. Rooms expire after **24 hours without game activity**; unchanged polls do not extend their lifetime. Expired local files are rejected but not automatically removed.
 
-## How multiplayer works
-
-The Next.js API owns the deck, randomness, legal moves, timers, powers, scoring, and card visibility. Each room is one expiring JSON snapshot. Atomic Redis compare-and-set transactions retry competing writes, so simultaneous buzzer presses cannot both claim the same table.
-
-Visible clients poll roughly every **650 ms**, and background tabs every **three seconds**. Requests advance expired timers and computer moves; there is no separate socket server or scheduled worker. If everyone closes the game, the next request resumes processing the room. Polling consumes Redis provider requests, so monitor usage as the number of players grows.
-
-Public snapshots exclude the deck, seat credentials, computer memories, and hidden card faces. Card IDs are random UUIDs. Seat credentials live in browser session storage. Private draws and peeks are sent only to the authorized seat. As with a physical memory game, a player can record cards they were legitimately shown.
-
-Computers use their opening memories, their own draws, public reveals, and powers they have played. They do not read hidden opponent cards to choose moves. This is a casual private-room game, without accounts or public matchmaking.
-
-## Development checks
+## Development
 
 ```sh
 npm test
@@ -165,25 +203,33 @@ npm run typecheck
 npm run format:check
 npm run build
 
-# With the app running in another terminal:
-npm run test:integration
+# With the app running; these scripts create disposable test rooms:
+npm run test:integration  # defaults to port 3000
+npm run test:mathbo      # defaults to port 3011
 ```
 
-Set `TEST_URL` to test another origin, including the deployed game. The multiplayer smoke test creates two temporary sessions, verifies private peeks/draws, races buzzers, attempts an opponent snap, replaces a card, calls CABO, checks scoring, and leaves both seats.
+Set `TEST_URL` to the running app's origin when using another port. The integration smoke checks two seats, private information, simultaneous buzzers, opponent snaps, replacements, CABO, and scoring. The Mathbo smoke covers both seats' expression flow, validation failures, hidden gifts, penalties, and timers. GitHub Actions runs the unit checks and integration smoke against the production build; run the Mathbo smoke separately against your running app.
 
-Tests cover rules, optional powers, scoring ties, hand protection, penalties, the five-second reveal, deck exhaustion, timeouts, computer rounds, and concurrent room writes. GitHub Actions runs the checks and the production API smoke test on pushes and pull requests. Browser checks cover card flights, animation handoffs, action notices, reveal colors, and responsive layouts.
+Unit tests cover card accounting, powers, bots, winning/ties, hand locks, deck exhaustion, timeouts, expression restrictions, room transactions, and animation state. Browser verification covers desktop/mobile flights and handoffs. See [Animation audit](docs/animation-audit.md) for the checked interactions and [Design notes](docs/design-refresh.md) for layout decisions.
 
-## Project map
+| Path                                                              | Responsibility                                              |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| `app/api/rooms/route.ts`                                          | Authenticated room reads, joins, and actions                |
+| `lib/game.ts`                                                     | Authoritative rules, timers, scoring, and bots              |
+| `lib/mathbo.ts`                                                   | Expression parser and validation                            |
+| `lib/store.ts`, `lib/storage/`                                    | Room transactions and Redis/file storage                    |
+| `components/table.tsx`                                            | Live board, hands, and controls                             |
+| `lib/card-views.ts`, `components/view-motion.tsx`                 | Stable private/public viewing state and round-trip flights  |
+| `components/card-motion.tsx`, `components/replacement-motion.tsx` | Discard, swap, snap, gift, penalty, and replacement flights |
+| `components/math-snap.tsx`                                        | Timed Mathbo expression builder                             |
+| `components/rules.tsx`                                            | Interactive rules guide                                     |
+| `components/table-action.tsx`                                     | Non-obstructing action notices                              |
+| `components/use-table-sounds.ts`                                  | Synthesized audio and mute control                          |
 
-| Path                                                    | Responsibility                                      |
-| ------------------------------------------------------- | --------------------------------------------------- |
-| `app/api/rooms/route.ts`                                | Authenticated room reads, joins, and actions        |
-| `lib/game.ts`                                           | Game rules, timers, scoring, and computer decisions |
-| `lib/store.ts` / `lib/storage/`                         | Room transactions and Redis/file storage            |
-| `components/table.tsx`                                  | Hands, controls, peeks, and public reveals          |
-| `components/card-motion.tsx` / `replacement-motion.tsx` | Explicit card flights and replacements              |
-| `components/table-action.tsx`                           | Gold action notices                                 |
-| `components/use-table-sounds.ts`                        | Locally synthesized sound effects and mute control  |
-| `tests/` / `scripts/smoke.mjs`                          | Rules, storage, and multiplayer checks              |
+### Artwork and assets
 
-Fonts are self-hosted **DM Sans**, under the [SIL Open Font License](public/fonts/OFL.txt). Sounds are generated locally with Web Audio. Source code is proprietary (`UNLICENSED`).
+The complete user-supplied SVG deck is preserved in `public/cards/SVG-cards-1.3/`, including original filenames and metadata. J/Q/K use the illustrated **`2.svg` variants**. Runtime faces are lossless **334×486 WebP** images in `public/cards/optimized/`, preserving the supplied artwork and colors while reducing the 52-face payload by about **75%**. The waiting room preloads them before play. Regenerate with `npm run prepare:cards`.
+
+Hero, felt, sleeve, and favicon artwork was created with the built-in image generation tool. Source artwork is in `public/art/`; [Artwork prompts](docs/artwork-prompts.md) records the exact prompts. `node scripts/prepare-icons.mjs` generates the multi-size favicon, app icon, and Apple icon from the saved original. Image preparation uses Sharp installed with Next.js.
+
+DM Sans is self-hosted under the [SIL Open Font License](public/fonts/OFL.txt). Sounds use Web Audio and need no audio downloads. The supplied deck did not include a separate license file. Application source is proprietary (`UNLICENSED`).
