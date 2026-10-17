@@ -10,6 +10,7 @@ import {
   CaretLeft,
   CaretRight,
   Check,
+  Cards,
   Crown,
   Eye,
   GearSix,
@@ -48,6 +49,7 @@ export default function Table({
   onMute,
   light,
   onTheme,
+  onDeck,
   onCopy,
   copied,
 }: {
@@ -60,6 +62,7 @@ export default function Table({
   onMute: () => void;
   light: boolean;
   onTheme: () => void;
+  onDeck: () => void;
   onCopy: () => void;
   copied: boolean;
 }) {
@@ -138,16 +141,56 @@ export default function Table({
   const cardScale =
     size.height < 500 || (size.width < 650 && size.height < 700)
       ? 'compact'
-      : size.height >= 780 && size.width >= 1200 && shown.length <= 3
-        ? 'large'
-        : size.height >= 700 && size.width >= 950 && shown.length <= 4
-          ? 'medium'
-          : 'normal';
+      : size.height >= 800 &&
+          size.width >= 1366 &&
+          shown.length <= 3 &&
+          (size.height >= 1000 || (me.cards.length <= 8 && shown.every((p) => p.cards.length <= 4)))
+        ? 'roomy'
+        : size.height >= 740 &&
+            size.width >= 1200 &&
+            shown.length <= 3 &&
+            (size.height >= 900 ||
+              (me.cards.length <= 8 && shown.every((p) => p.cards.length <= 4)))
+          ? 'large'
+          : size.height >= 700 && size.width >= 1100 && shown.length <= 4
+            ? 'laptop'
+            : size.height >= 700 && size.width >= 950 && shown.length <= 4
+              ? 'medium'
+              : 'normal';
   const cardWidth =
-    cardScale === 'compact' ? 36 : cardScale === 'large' ? 72 : cardScale === 'medium' ? 60 : 52;
+    cardScale === 'compact'
+      ? 36
+      : cardScale === 'roomy'
+        ? 88
+        : cardScale === 'large'
+          ? 80
+          : cardScale === 'laptop'
+            ? 68
+            : cardScale === 'medium'
+              ? 60
+              : 52;
   const cardHeight =
-    cardScale === 'compact' ? 52 : cardScale === 'large' ? 105 : cardScale === 'medium' ? 87 : 74;
-  const cardGap = cardScale === 'large' ? 14 : cardScale === 'medium' ? 10 : 8;
+    cardScale === 'compact'
+      ? 52
+      : cardScale === 'roomy'
+        ? 128
+        : cardScale === 'large'
+          ? 116
+          : cardScale === 'laptop'
+            ? 99
+            : cardScale === 'medium'
+              ? 87
+              : 74;
+  const cardGap =
+    cardScale === 'roomy'
+      ? size.width < 1440
+        ? 10
+        : 16
+      : cardScale === 'large'
+        ? 12
+        : ['laptop', 'medium'].includes(cardScale)
+          ? 10
+          : 8;
   // A peek temporarily unmounts its hand card. Remember the first deal across
   // those remounts, including the beat before polling ends the opening phase.
   const knownIds = useRef(
@@ -244,7 +287,9 @@ export default function Table({
     help =
       room.endReason === 'deck'
         ? 'The draw deck is empty. Lowest total wins.'
-        : 'Lowest total wins. The caller must beat everyone outright.';
+        : room.endReason === 'players'
+          ? 'The other players left. You are the last player at the table.'
+          : 'Lowest total wins. The caller must beat everyone outright.';
   } else if (peek) {
     title = 'Two cards to remember.';
     help =
@@ -318,7 +363,8 @@ export default function Table({
       ? before.cardIds.map((id) => p.cards.find((c) => c.id === id) || { id })
       : p.cards;
     const columns =
-      (own || (shown.length === 1 && size.width < 650) || size.height < 500) && cards.length <= 6
+      (own || (shown.length === 1 && size.width < 650) || size.height < 500) &&
+      cards.length <= (own && size.width >= 950 ? 8 : 6)
         ? Math.max(4, cards.length)
         : size.height < 500
           ? 4
@@ -547,6 +593,10 @@ export default function Table({
                   {light ? <Moon /> : <Sun />}
                   {light ? 'Dark controls' : 'Light controls'}
                 </button>
+                <button onClick={onDeck} aria-label="Customize deck">
+                  <Cards />
+                  Customize deck
+                </button>
                 <button onClick={onRules} aria-label="Learn the rules">
                   <Question />
                   Learn the rules
@@ -555,16 +605,14 @@ export default function Table({
                   {copied ? <Check /> : <Copy />}
                   {copied ? 'Invite copied' : 'Copy invite'}
                 </button>
-                {results && (
-                  <button
-                    className="leave-table-action"
-                    disabled={busy}
-                    onClick={() => onAction({ type: 'leave' })}
-                  >
-                    <DoorOpen />
-                    Leave table
-                  </button>
-                )}
+                <button
+                  className="leave-table-action"
+                  disabled={busy}
+                  onClick={() => onAction({ type: 'leave' })}
+                >
+                  <DoorOpen />
+                  {results ? 'Leave table' : 'Leave game'}
+                </button>
               </div>
             </details>
           </div>

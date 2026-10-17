@@ -369,6 +369,241 @@ test('leaving from results keeps the selected seat index valid and transfers hos
   assert.equal(room.players.length, 2);
   assert.ok(room.winnerNames.length);
 });
+function assertCompleteDeck(room: Room) {
+  const cards = [
+    ...room.deck,
+    ...room.discard,
+    ...room.players.flatMap((p) => p.cards),
+    ...(room.drawn ? [room.drawn] : []),
+  ];
+  assert.equal(cards.length, 52);
+  assert.equal(new Set(cards.map((c) => c.id)).size, 52);
+}
+
+test('leaving during play returns the entire hand, revokes the seat, and transfers hosting', () => {
+  const { room, id, guest, now } = playing(3);
+  const returned = room.players[0].cards.map((c) => c.id);
+  const deckCount = room.deck.length;
+  room.players[1].memory[returned[0]] = 5;
+  room.publicReveals[returned[0]] = now + 5000;
+  act(room, id, { type: 'leave' }, now);
+  assert.equal(room.phase, 'playing');
+  assert.equal(room.hostId, guest);
+  assert.equal(current(room).id, guest);
+  assert.equal(room.stage, 'draw');
+  assert.equal(room.deadline, now + room.settings.turnSeconds * 1000);
+  assert.equal(room.tokens['host-token'], undefined);
+  assert.equal(room.deck.length, deckCount + 4);
+  assert.ok(returned.every((id) => room.deck.some((c) => c.id === id)));
+  assert.equal(room.players[0].memory[returned[0]], undefined);
+  assert.equal(room.publicReveals[returned[0]], undefined);
+  assert.throws(() => act(room, id, { type: 'draw' }, now), /seat/);
+  assert.ok(
+    publicRoom(room, guest, now)
+      .players.flatMap((p) => p.cards)
+      .every((c) => !c.rank),
+  );
+  assertCompleteDeck(room);
+});
+
+test('leaving while holding a draw shuffles it back too, without changing the discard', () => {
+  const { room, id, now } = playing(3);
+  act(room, id, { type: 'draw' }, now);
+  const drawnId = room.drawn!.id;
+  const discard = room.discard.map((c) => c.id);
+  act(room, id, { type: 'leave' }, now + 100);
+  assert.equal(room.drawn, null);
+  assert.equal(room.power, null);
+  assert.ok(room.deck.some((c) => c.id === drawnId));
+  assert.deepEqual(
+    room.discard.map((c) => c.id),
+    discard,
+  );
+  assertCompleteDeck(room);
+});
+
+test('seat removal preserves the active player or selects the correct clockwise successor', () => {
+  for (let turn = 0; turn < 4; turn++) {
+    for (let leaving = 0; leaving < 4; leaving++) {
+      const { room, now } = playing(4);
+      room.turnIndex = turn;
+      const nextId = room.players[leaving === turn ? (turn + 1) % 4 : turn].id;
+      const deadline = room.deadline;
+      act(room, room.players[leaving].id, { type: 'leave' }, now + 100);
+      assert.equal(current(room).id, nextId);
+      if (turn !== leaving) assert.equal(room.deadline, deadline);
+      assertCompleteDeck(room);
+    }
+  }
+});
+
+test('leaving during the opening peek preserves the other choices and opening timer', () => {
+  const { room, start, id, guest } = fixture(3);
+  const time = start + 2100;
+  const choice = room.players[1].cards[0].id;
+  act(room, guest, { type: 'initial-peek', cardId: choice }, time);
+  const deadline = room.deadline;
+  act(room, id, { type: 'leave' }, time);
+  assert.equal(room.phase, 'peek');
+  assert.equal(room.deadline, deadline);
+  assert.deepEqual(room.initialChoices[guest], [choice]);
+  tick(room, deadline);
+  assert.equal(current(room).id, guest);
+  assert.equal(room.phase, 'playing');
+  assertCompleteDeck(room);
+});
+
+for (const phase of ['peek', 'playing'] as const)
+  test(`leaving ${phase} ends a solo human game immediately instead of letting bots continue`, () => {
+    const { room, id } = fixture(3);
+    if (phase === 'playing') tick(room, room.deadline);
+    room.players.slice(1).forEach((p) => (p.bot = true));
+    const now = room.availableAt + 100;
+    act(room, id, { type: 'leave' }, now);
+    assert.equal(room.phase, 'results');
+    assert.equal(room.endReason, 'players');
+    assert.equal(room.deadline, 0);
+    assert.equal(room.snap, null);
+    assert.equal(room.privatePeek, null);
+    assert.deepEqual(room.winners, []);
+    assert.ok(room.players.every((p) => p.wins === 0));
+    const events = room.events.length;
+    tick(room, now + 100_000);
+    assert.equal(room.events.length, events);
+    assertCompleteDeck(room);
+    assert.doesNotThrow(() => publicRoom(room, id, now));
+  });
+
+test('a remaining human and bots keep playing; the last remaining player wins', () => {
+  const { room, id, guest, now } = playing(3);
+  const botId = room.players[2].id;
+  room.players[2].bot = true;
+  act(room, id, { type: 'leave' }, now);
+  assert.equal(room.phase, 'playing');
+  assert.equal(room.hostId, guest);
+  act(room, botId, { type: 'leave' }, now + 100);
+  assert.equal(room.phase, 'results');
+  assert.equal(room.endReason, 'players');
+  assert.deepEqual(room.winners, [guest]);
+  assertCompleteDeck(room);
+});
+
+test('a departing CABO caller cancels the final lap and unlocks normal play', () => {
+  const { room, id, guest, now } = playing(3);
+  act(room, id, { type: 'cabo' }, now);
+  tick(room, room.deadline);
+  act(room, id, { type: 'leave' }, room.availableAt + 100);
+  assert.equal(room.caboId, null);
+  assert.deepEqual(room.finalTurns, []);
+  assert.equal(current(room).id, guest);
+  assert.equal(room.phase, 'playing');
+  assertCompleteDeck(room);
+});
+
+test('a departing final-turn player is removed from CABO and play finishes after the remaining turn', () => {
+  const { room, id, guest, now } = playing(3);
+  const lastId = room.players[2].id;
+  act(room, id, { type: 'cabo' }, now);
+  tick(room, room.deadline);
+  let time = room.availableAt;
+  act(room, guest, { type: 'leave' }, time);
+  assert.deepEqual(room.finalTurns, [lastId]);
+  assert.equal(current(room).id, lastId);
+  act(room, lastId, { type: 'draw' }, time);
+  act(room, lastId, { type: 'discard' }, time + 800);
+  time = room.deadline;
+  tick(room, time);
+  assert.equal(room.phase, 'results');
+  assert.equal(room.endReason, 'cabo');
+  assertCompleteDeck(room);
+});
+
+for (const stage of ['choose', 'math', 'give'] as const)
+  test(`a departing snapper releases the ${stage} buzzer without a penalty`, () => {
+    const { room, guest, now } = playing(3);
+    room.settings.mode = stage === 'math' ? 'mathbo' : 'cabo';
+    if (stage === 'give') room.players[2].cards[0].rank = room.discard.at(-1)!.rank;
+    act(room, guest, { type: 'buzz', topId: room.discard.at(-1)!.id }, now);
+    if (stage !== 'choose')
+      act(
+        room,
+        guest,
+        {
+          type: 'snap',
+          target: { playerId: room.players[2].id, cardId: room.players[2].cards[0].id },
+        },
+        now + 10,
+      );
+    assert.equal(room.snap?.stage, stage);
+    act(room, guest, { type: 'leave' }, now + 100);
+    assert.equal(room.snap, null);
+    assert.deepEqual(room.publicReveals, {});
+    assert.ok(room.players.every((p) => p.cards.length === 4));
+    assert.ok(!room.events.some((e) => e.kind === 'penalty'));
+    assertCompleteDeck(room);
+  });
+
+test('a departing Mathbo target cancels the challenge and gives the paused turn its time back', () => {
+  const { room, id, guest, now } = playing(4);
+  room.settings.mode = 'mathbo';
+  const target = { playerId: room.players[2].id, cardId: room.players[2].cards[0].id };
+  const deadline = room.deadline;
+  act(room, guest, { type: 'buzz', topId: room.discard.at(-1)!.id }, now);
+  act(room, guest, { type: 'snap', target }, now + 10);
+  act(room, target.playerId, { type: 'leave' }, now + 4000);
+  assert.equal(room.snap, null);
+  assert.equal(current(room).id, id);
+  assert.equal(room.deadline, deadline + 4000);
+  assert.equal(room.players.find((p) => p.id === guest)!.cards.length, 4);
+  assertCompleteDeck(room);
+});
+
+test('an unrelated departure preserves another player’s buzzer and current draw', () => {
+  const { room, id, guest, now } = playing(4);
+  act(room, id, { type: 'draw' }, now);
+  const drawnId = room.drawn!.id;
+  act(room, guest, { type: 'buzz', topId: room.discard.at(-1)!.id }, now + 800);
+  const snap = structuredClone(room.snap);
+  act(room, room.players[2].id, { type: 'leave' }, now + 900);
+  assert.deepEqual(room.snap, snap);
+  assert.equal(room.drawn?.id, drawnId);
+  assert.equal(current(room).id, id);
+  assertCompleteDeck(room);
+});
+
+for (const rank of ['9', 'Q'] as const)
+  test(`leaving a privately viewed hand finishes the ${rank} look without stalling`, () => {
+    const { room, id, guest, now } = playing(3);
+    const nine = room.deck.find((c) => c.rank === rank)!;
+    room.deck.splice(room.deck.indexOf(nine), 1);
+    held(room, nine, now);
+    act(room, id, { type: 'power' }, now);
+    act(
+      room,
+      id,
+      { type: 'look', targets: [{ playerId: guest, cardId: room.players[1].cards[0].id }] },
+      now + 2900,
+    );
+    act(room, guest, { type: 'leave' }, now + 3000);
+    assert.equal(room.privatePeek, null);
+    assert.equal(room.stage, rank === 'Q' ? 'power-swap' : 'between');
+    if (rank === 'Q') act(room, id, { type: 'skip-swap' }, room.availableAt);
+    tick(room, room.deadline);
+    assert.notEqual(current(room).id, id);
+    assert.equal(room.stage, 'draw');
+    assertCompleteDeck(room);
+  });
+
+test('leaving during a replacement clears its stale animation payload', () => {
+  const { room, id, now } = playing(3);
+  act(room, id, { type: 'draw' }, now);
+  act(room, id, { type: 'replace', cardId: room.players[0].cards[0].id }, now + 800);
+  act(room, id, { type: 'leave' }, now + 900);
+  assert.equal(room.replacement, null);
+  assert.doesNotThrow(() => publicRoom(room, id, now + 900));
+  assertCompleteDeck(room);
+});
+
 function botSwapFixture() {
   const f = playing();
   const bot = f.room.players[0];

@@ -27,7 +27,7 @@ const lessons: Lesson[] = [
     title: 'Draw, then decide.',
     paragraphs: [
       'On your turn, draw privately from the deck. Discard it, use its power and discard it, or replace one of your face-down cards. The replaced card is discarded without a power.',
-      'A = 1 · 2–10 = face value · J = 11 · Q = 12 · Black K = 13 · Red K = −1. An empty hand scores zero.',
+      'A = 1 · 2–10 = face value · J = 11 · Q = 12 · K♣ / K♠ = 13 · K♥ / K♦ = −1. King values follow their suit, including with custom artwork. An empty hand scores zero.',
     ],
     note: 'You cannot draw from the discard pile.',
   },
@@ -47,10 +47,10 @@ const lessons: Lesson[] = [
     powers: [
       ['J', 'Blind swap', 'Swap any two different, unlocked cards.'],
       ['Q', 'Look & swap', 'Look at one card anywhere; optionally swap any two.'],
-      ['Black K', 'Double look & swap', 'Look at two cards anywhere; optionally swap any two.'],
+      ['K♣ / K♠', 'Double look & swap', 'Look at two cards anywhere; optionally swap any two.'],
     ],
     paragraphs: [],
-    note: 'Looking and swapping are separate. You may skip either step. Red K has no power.',
+    note: 'Looking and swapping are separate. You may skip either step. Kings of hearts or diamonds have no power.',
   },
   {
     title: 'Fast hands win the buzzer.',

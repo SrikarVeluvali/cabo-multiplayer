@@ -21,6 +21,10 @@ The screenshots below show the current source version. The hosted link runs the 
 
 ## Made for playing
 
+**Customize your deck:** open **Table settings → Your deck** in the waiting room, or **Table options → Customize deck** while playing. Every player, including guests, can choose their own artwork. Classic, Deltarune, Deltarune High contrast, and **8-bit theme** are included. Your choice is saved on your device and applies to card faces throughout the table and its animations. Add future themes with images and one JSON entry; see [Custom card themes](docs/deck-themes.md).
+
+![Choose Classic, either Deltarune palette, or the original 8-bit deck](docs/screenshots/deck-themes.jpg)
+
 The live table fills the screen with the cards and controls. Action notices have their own strip above the hands, leaving the piles clear. Open the scrollable **Table activity** log to follow earlier moves, or **Table options** for sound, theme, rules, and leaving.
 
 - Cards travel visibly when drawn, replaced, discarded, swapped, snapped, or given to another player.
@@ -113,6 +117,8 @@ If the **draw deck runs out before CABO**, the last draw and any power finish, c
 The host chooses a **30, 45, 60, or 90-second turn limit**. A timeout discards a held draw without playing its power and passes the turn. Between turns, the snap window lasts **three seconds** at relaxed pace or **1.8 seconds** at quick pace; resolving a snap restarts it. Actions wait for cards to settle.
 
 Refresh the same tab to reconnect. Closing it leaves the seat in the round, with turns advancing through timeouts. An active human can inherit hosting after the host has been absent for a minute. After scoring, the host can start a rematch or return everyone to the waiting room.
+
+Choose **Table options → Leave game** to leave during a round, including the opening peek. Your hand and any card you are holding from the draw pile are shuffled back into the draw deck. Your unfinished turn passes to the next player with a fresh timer, and hosting passes to another human. A snap involving a departing player is cancelled without penalty. If the CABO caller leaves, the final lap is cancelled and normal play resumes; other departing players are removed from the final-turn list. If only one player remains, they win. If no human players remain, the game ends immediately without awarding bots a win.
 
 ## Mathbo
 

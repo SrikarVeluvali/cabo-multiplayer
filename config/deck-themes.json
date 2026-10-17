@@ -1,0 +1,62 @@
+{
+  "defaultTheme": "classic",
+  "themes": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "description": "The original illustrated deck.",
+      "back": "/art/engraved-sleeve.webp",
+      "background": "#ffffff",
+      "face": {
+        "type": "files",
+        "template": "/cards/optimized/{rank}_of_{suit}{court}.webp",
+        "rankNames": { "A": "ace", "J": "jack", "Q": "queen", "K": "king" },
+        "courtSuffix": "2"
+      }
+    },
+    {
+      "id": "deltarune",
+      "name": "Deltarune",
+      "description": "Pixel characters and four-color suits.",
+      "credit": "User-supplied Deltarune Balatro mod artwork",
+      "background": "#f6f0dc",
+      "pixelated": true,
+      "face": {
+        "type": "atlas",
+        "image": "/cards/themes/deltarune/2x/DeltaruneDeck.png",
+        "columns": ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"],
+        "rows": ["hearts", "clubs", "diamonds", "spades"]
+      }
+    },
+    {
+      "id": "deltarune-hc",
+      "name": "Deltarune · High contrast",
+      "description": "Brighter suits with outlined pixel details.",
+      "credit": "User-supplied Deltarune Balatro mod artwork",
+      "background": "#f6f0dc",
+      "pixelated": true,
+      "face": {
+        "type": "atlas",
+        "image": "/cards/themes/deltarune/2x/DeltaruneDeck_hc.png",
+        "columns": ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"],
+        "rows": ["hearts", "clubs", "diamonds", "spades"]
+      }
+    },
+    {
+      "id": "8-bit",
+      "name": "8-bit theme",
+      "description": "Balatro's basic pixel-art deck.",
+      "credit": "User-supplied Balatro BASIC artwork",
+      "background": "transparent",
+      "pixelated": true,
+      "preload": false,
+      "face": {
+        "type": "files",
+        "template": "/cards/themes/8-bit/8BitDeck{index}.png",
+        "rankOrder": ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"],
+        "suitOrder": ["hearts", "clubs", "diamonds", "spades"],
+        "startIndex": 1
+      }
+    }
+  ]
+}

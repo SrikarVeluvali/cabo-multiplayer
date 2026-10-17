@@ -1,9 +1,11 @@
 'use client';
-import { memo, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion } from 'motion/react';
 import Image from 'next/image';
 import type { TableCard } from '@/lib/types';
-import { cardArtwork } from '@/lib/card-art';
+import { deckBack } from '@/lib/deck-themes';
+import CardArtwork from './card-artwork';
+import { useDeckTheme } from './deck-theme';
 
 export const suitSymbol = { spades: '♠', hearts: '♥', clubs: '♣', diamonds: '♦' };
 export default function Card({
@@ -25,6 +27,7 @@ export default function Card({
   selected?: boolean;
   small?: boolean;
 }) {
+  const { theme } = useDeckTheme();
   const face = visible && !!card.rank && !!card.suit;
   const red = card.suit === 'hearts' || card.suit === 'diamonds';
   const ref = useRef<HTMLDivElement>(null);
@@ -76,7 +79,7 @@ export default function Card({
           <div className="card-back card-side">
             <Image
               className="card-sleeve-img"
-              src="/art/engraved-sleeve.webp"
+              src={deckBack(theme)}
               alt=""
               width={320}
               height={480}
@@ -85,28 +88,14 @@ export default function Card({
               loading="eager"
             />
           </div>
-          <div className={`card-front card-side ${red ? 'red' : 'black'}`}>
-            <CardFace rank={card.rank} suit={card.suit} />
+          <div
+            className={`card-front card-side ${red ? 'red' : 'black'}`}
+            style={{ backgroundColor: theme.background ?? '#ffffff' }}
+          >
+            <CardArtwork rank={card.rank} suit={card.suit} />
           </div>
         </motion.div>
       </motion.div>
     </button>
   );
 }
-
-// The clock updates ten times per second. Artwork only changes with the card.
-const CardFace = memo(function CardFace({ rank, suit }: Pick<TableCard, 'rank' | 'suit'>) {
-  if (!rank || !suit) return null;
-  return (
-    <Image
-      className="card-face-img"
-      src={cardArtwork(rank, suit)}
-      alt=""
-      width={334}
-      height={486}
-      unoptimized
-      draggable={false}
-      loading="eager"
-    />
-  );
-});

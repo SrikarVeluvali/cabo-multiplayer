@@ -5,6 +5,7 @@ import Image from 'next/image';
 import {
   ArrowRight,
   Check,
+  Cards,
   Copy,
   Crown,
   DoorOpen,
@@ -25,7 +26,10 @@ import { useTableSounds } from './use-table-sounds';
 import Rules from './rules';
 import Table from './table';
 import type { Action, PublicRoom } from '@/lib/types';
-import { deckArtwork } from '@/lib/card-art';
+import { deckAssets } from '@/lib/deck-themes';
+import { DeckThemeProvider, useDeckTheme } from './deck-theme';
+import DeckPicker from './deck-picker';
+import CardArtwork from './card-artwork';
 
 export type OnAction = (action: Action) => Promise<void>;
 export function Avatar({
@@ -45,11 +49,20 @@ export function Avatar({
 }
 
 export default function Cabo() {
+  return (
+    <DeckThemeProvider>
+      <CaboGame />
+    </DeckThemeProvider>
+  );
+}
+function CaboGame() {
   const game = useCabo();
+  const { theme: deckTheme } = useDeckTheme();
   const sound = useTableSounds(game.room);
   const [rules, setRules] = useState(false),
     [light, setLight] = useState(false),
-    [copied, setCopied] = useState(false);
+    [copied, setCopied] = useState(false),
+    [deckOpen, setDeckOpen] = useState(false);
   useEffect(() => {
     setLight(localStorage.getItem('cabo-theme') === 'light');
   }, []);
@@ -72,9 +85,10 @@ export default function Cabo() {
     setLight(!light);
   };
   useEffect(() => {
-    if (game.room?.phase !== 'lobby') return;
+    if (deckTheme.preload === false) return;
+    if (game.room?.phase !== 'lobby' && !deckOpen && !game.room) return;
     const timer = window.setTimeout(() => {
-      deckArtwork.forEach((src) => {
+      deckAssets(deckTheme).forEach((src) => {
         const image = new window.Image();
         image.decoding = 'async';
         image.fetchPriority = 'low';
@@ -83,7 +97,7 @@ export default function Cabo() {
       });
     }, 150);
     return () => window.clearTimeout(timer);
-  }, [game.room?.phase]);
+  }, [game.room?.phase, deckTheme, deckOpen]);
   return (
     <MotionConfig reducedMotion="user">
       <div
@@ -172,6 +186,7 @@ export default function Cabo() {
               onAction={game.action}
               onCopy={copy}
               copied={copied}
+              onDeck={() => setDeckOpen(true)}
             />
           ) : (
             <Table
@@ -184,6 +199,7 @@ export default function Cabo() {
               onMute={sound.toggle}
               light={light}
               onTheme={changeTheme}
+              onDeck={() => setDeckOpen(true)}
               onCopy={copy}
               copied={copied}
             />
@@ -210,6 +226,7 @@ export default function Cabo() {
           )}
         </AnimatePresence>
         {rules && <Rules mode={game.room?.settings.mode} onClose={() => setRules(false)} />}
+        {deckOpen && <DeckPicker onClose={() => setDeckOpen(false)} />}
       </div>
     </MotionConfig>
   );
@@ -346,13 +363,16 @@ function Lobby({
   onAction,
   onCopy,
   copied,
+  onDeck,
 }: {
   room: PublicRoom;
   busy: boolean;
   onAction: OnAction;
   onCopy: () => void;
   copied: boolean;
+  onDeck: () => void;
 }) {
+  const { theme: deckTheme } = useDeckTheme();
   const host = room.hostId === room.you,
     me = room.players.find((p) => p.id === room.you)!;
   const waiting = room.players.some((p) => p.id !== room.hostId && !p.ready);
@@ -469,6 +489,24 @@ function Lobby({
               <h2>Table settings</h2>
             </div>
             <GearSix />
+          </div>
+          <div className="personal-deck-setting">
+            <div>
+              <span>Your deck</span>
+              <small>Your view only</small>
+            </div>
+            <button
+              type="button"
+              className="button secondary personal-deck-button"
+              onClick={onDeck}
+              aria-label={`Customize deck: ${deckTheme.name}`}
+            >
+              <span className="personal-deck-preview" aria-hidden="true">
+                <CardArtwork rank="K" suit="hearts" />
+              </span>
+              <span>{deckTheme.name}</span>
+              <Cards />
+            </button>
           </div>
           <fieldset disabled={!host || busy}>
             <label className={room.settings.mode !== 'mathbo' ? 'setting-wide' : undefined}>

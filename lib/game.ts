@@ -152,32 +152,130 @@ function beginTurn(room: Room, now: number) {
   room.deadline = now + room.settings.turnSeconds * 1000;
   room.availableAt = now;
 }
-export function finish(room: Room, now = Date.now()) {
+export function finish(room: Room, now = Date.now(), reason?: NonNullable<Room['endReason']>) {
   const scores = room.players.map((p) => p.cards.reduce((sum, c) => sum + value(c), 0));
   const min = Math.min(...scores);
   const lowest = room.players.filter((_, i) => scores[i] === min);
-  room.winners = lowest.filter((p) => p.id !== room.caboId || lowest.length === 1).map((p) => p.id);
+  room.winners =
+    reason === 'players' && !room.players.some((p) => !p.bot)
+      ? []
+      : lowest.filter((p) => p.id !== room.caboId || lowest.length === 1).map((p) => p.id);
   room.winnerNames = room.players.filter((p) => room.winners.includes(p.id)).map((p) => p.name);
   for (const p of room.players) if (room.winners.includes(p.id)) p.wins++;
   room.phase = 'results';
-  room.endReason = !room.caboId && !room.deck.length ? 'deck' : 'cabo';
+  room.endReason = reason ?? (!room.caboId && !room.deck.length ? 'deck' : 'cabo');
   room.replacement = null;
   room.movement = null;
   room.snap = null;
   room.publicReveals = {};
   room.privatePeek = null;
+  room.power = null;
+  room.initialChoices = {};
   if (room.drawn) room.discard.push(room.drawn);
   room.drawn = null;
   room.deadline = 0;
   addLog(
     room,
-    `${room.players
-      .filter((p) => room.winners.includes(p.id))
-      .map((p) => p.name)
-      .join(' & ')} won with ${min} points.`,
+    !room.winners.length
+      ? 'Game ended. No human players remain.'
+      : `${room.players
+          .filter((p) => room.winners.includes(p.id))
+          .map((p) => p.name)
+          .join(' & ')} won with ${min} points.`,
     'info',
     now,
   );
+}
+function leaveTable(room: Room, me: Player, now: number) {
+  const active = room.phase === 'peek' || room.phase === 'playing';
+  const turnId = current(room)?.id;
+  const nextId = room.players[(room.turnIndex + 1) % room.players.length]?.id;
+  const returned = [...me.cards];
+  if (active) {
+    if (turnId === me.id && room.drawn) {
+      returned.push(room.drawn);
+      room.drawn = null;
+    }
+    room.deck = shuffle([...room.deck, ...returned]);
+    const returnedIds = new Set(returned.map((c) => c.id));
+    for (const p of room.players) for (const cardId of returnedIds) delete p.memory[cardId];
+    for (const cardId of returnedIds) delete room.publicReveals[cardId];
+    // A departing snapper, target, or turn owner cannot leave a paused clock behind.
+    if (
+      room.snap &&
+      (room.snap.playerId === me.id || room.snap.target?.playerId === me.id || turnId === me.id)
+    ) {
+      if (room.snap.target) delete room.publicReveals[room.snap.target.cardId];
+      releaseBuzzer(room, now);
+      addLog(room, 'Snap cancelled because a player left. No penalty.', 'info', now);
+    }
+    if (
+      room.movement?.hands.some((h) => h.playerId === me.id) ||
+      room.movement?.flights.some((f) =>
+        [f.from, f.to].some((loc) => loc.zone === 'hand' && loc.playerId === me.id),
+      )
+    )
+      room.movement = null;
+    if (room.replacement?.playerId === me.id) room.replacement = null;
+    if (room.privatePeek) {
+      room.privatePeek.cardIds = room.privatePeek.cardIds.filter((id) => !returnedIds.has(id));
+      if (room.privatePeek.playerId === me.id || !room.privatePeek.cardIds.length)
+        room.privatePeek = null;
+    }
+  }
+  room.players = room.players.filter((p) => p.id !== me.id);
+  room.turnIndex = Math.max(
+    0,
+    room.players.findIndex((p) => p.id === (turnId === me.id ? nextId : turnId)),
+  );
+  for (const [token, id] of Object.entries(room.tokens))
+    if (id === me.id) delete room.tokens[token];
+  delete room.initialChoices[me.id];
+  delete room.snapAttempts[me.id];
+  room.finalTurns = room.finalTurns.filter((id) => id !== me.id);
+  if (room.hostId === me.id) room.hostId = room.players.find((p) => !p.bot)?.id || '';
+  addLog(
+    room,
+    `${me.name} left the table.${active ? ` Their ${returned.length} cards were shuffled into the draw deck.` : ''}`,
+    'info',
+    now,
+    active ? 'Player left' : undefined,
+  );
+  if (!active) return;
+  if (room.caboId === me.id) {
+    room.caboId = null;
+    room.finalTurns = [];
+    addLog(
+      room,
+      'The CABO caller left. The final lap is cancelled; normal play continues.',
+      'info',
+      now,
+    );
+  }
+  if (!room.players.some((p) => !p.bot) || room.players.length < 2) {
+    finish(room, now, 'players');
+    return;
+  }
+  if (room.phase === 'peek') return;
+  if (room.caboId && !room.finalTurns.length && (turnId === me.id || room.stage === 'between')) {
+    finish(room, now);
+    return;
+  }
+  if (turnId === me.id) {
+    beginTurn(room, now);
+    addLog(room, `${current(room).name}'s turn.`, 'info', now);
+  } else if (room.stage === 'power-view' && !room.privatePeek) {
+    // The viewed hand disappeared: finish the look without stalling the power.
+    if (room.power?.swap) {
+      room.stage = 'power-swap';
+      lock(room, now, VIEW_RETURN_MS);
+      room.deadline = Math.max(room.deadline, room.availableAt + room.settings.turnSeconds * 1000);
+    } else {
+      endTurn(room, now);
+      lock(room, now, VIEW_RETURN_MS);
+      room.deadline = room.availableAt + pace(room);
+    }
+  }
 }
 function endTurn(room: Room, now: number) {
   const p = current(room);
@@ -369,16 +467,7 @@ export function act(room: Room, id: string, action: Action, now = Date.now()) {
   if (!me) throw new Error('Your seat is no longer available.');
   const host = id === room.hostId;
   if (action.type === 'leave') {
-    if (!['lobby', 'results'].includes(room.phase))
-      throw new Error(
-        'Finish the round before leaving. Closing the tab will let the turn timer play for you.',
-      );
-    room.players = room.players.filter((p) => p.id !== id);
-    room.turnIndex %= Math.max(1, room.players.length);
-    for (const [token, pid] of Object.entries(room.tokens))
-      if (pid === id) delete room.tokens[token];
-    if (host) room.hostId = room.players.find((p) => !p.bot)?.id || '';
-    addLog(room, `${me.name} left the table.`, 'info', now);
+    leaveTable(room, me, now);
     return;
   }
   if (action.type === 'lobby') {

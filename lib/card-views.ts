@@ -67,6 +67,7 @@ export function cardViews(
   if (!reduced) {
     for (const view of previous) {
       if (view.scope !== scope || active.has(view.id) || moving.has(view.card.id)) continue;
+      if (view.viewerId && !room.players.some((p) => p.id === view.viewerId)) continue;
       // A card transferred to another hand or public reveal has another owner
       // for its animation. Never resurrect a return flight behind that move.
       if ([...active.values()].some((next) => next.card.id === view.card.id)) continue;

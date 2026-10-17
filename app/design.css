@@ -440,6 +440,47 @@
   gap: 17px 12px;
   margin: 24px 0;
 }
+.personal-deck-setting {
+  margin-top: 16px;
+}
+.personal-deck-setting > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.personal-deck-setting small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.design-refresh .personal-deck-button {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 7px 10px;
+  min-height: 58px;
+  text-align: left;
+  font-size: 12px;
+}
+.personal-deck-button > span:nth-child(2) {
+  flex: 1;
+}
+.personal-deck-button > svg {
+  color: var(--gold);
+  width: 18px;
+}
+.personal-deck-preview {
+  display: block;
+  position: relative;
+  flex: 0 0 29px;
+  width: 29px;
+  height: 42px;
+  border-radius: 3px;
+  overflow: hidden;
+}
 .design-refresh .blackjack-lobby .settings-panel select {
   font-size: 12px;
 }
@@ -491,6 +532,220 @@
   pointer-events: none;
   user-select: none;
 }
+.card-atlas-face {
+  background-repeat: no-repeat;
+}
+
+/* Deck art is the focus; the picker uses the table's existing pine and brass. */
+.deck-dialog {
+  width: min(1080px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 26px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 24px 80px #06130d70;
+}
+.deck-dialog::backdrop {
+  background: #061a14bd;
+  backdrop-filter: blur(5px);
+}
+.deck-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.deck-dialog-heading h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+.deck-dialog-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.deck-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 26px 0;
+  padding: 0;
+  border: 0;
+}
+.deck-choice {
+  display: grid;
+  position: relative;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px 16px 18px;
+  cursor: pointer;
+  background: var(--bg);
+}
+.deck-choice:hover {
+  border-color: var(--muted);
+}
+.deck-choice-selected {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+.deck-choice:focus-within {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+.deck-choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.deck-choice-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 126px;
+  padding: 9px 0 0;
+}
+.deck-preview-card {
+  position: relative;
+  display: block;
+  width: clamp(54px, 5.8vw, 71px);
+  height: clamp(76px, 8.2vw, 100px);
+  flex: 0 0 clamp(54px, 5.8vw, 71px);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px #06130d45;
+  background: #fff;
+}
+.deck-preview-card:first-child {
+  transform: rotate(-9deg) translate(7px, 0);
+}
+.deck-preview-card:nth-child(2) {
+  transform: translateY(-8px);
+  z-index: 1;
+}
+.deck-preview-card:last-child {
+  transform: rotate(9deg) translate(-7px, 0);
+}
+.deck-choice-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-right: 22px;
+}
+.deck-choice-copy strong {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text);
+}
+.deck-choice-copy > span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.deck-choice-mark {
+  position: absolute;
+  right: 12px;
+  bottom: 18px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--bg);
+}
+.deck-choice-selected .deck-choice-mark {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.deck-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.deck-dialog-footer > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.deck-dialog-footer .button {
+  min-width: 100px;
+}
+.deck-credit {
+  margin: 12px 0 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 760px) {
+  .deck-dialog {
+    padding: 20px;
+  }
+  .deck-choices {
+    grid-template-columns: 1fr;
+    margin: 20px 0;
+    gap: 12px;
+  }
+  .deck-choice {
+    grid-template-columns: 114px minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
+    padding: 14px 12px;
+    gap: 12px;
+  }
+  .deck-choice-preview {
+    min-height: 90px;
+    padding: 0;
+  }
+  .deck-preview-card {
+    width: 42px;
+    height: 59px;
+    flex-basis: 42px;
+    border-radius: 3px;
+  }
+  .deck-choice-copy {
+    padding: 0 10px 0 0;
+  }
+  .deck-choice-copy strong {
+    font-size: 13px;
+  }
+  .deck-choice-copy > span {
+    font-size: 11px;
+  }
+  .deck-choice-mark {
+    width: 16px;
+    height: 16px;
+    right: 8px;
+    bottom: 8px;
+  }
+  .deck-dialog-heading h2 {
+    font-size: 24px;
+  }
+  .deck-dialog-heading p {
+    font-size: 12px;
+  }
+}
 .design-refresh .card-selected {
   outline: 2px solid #e1c282;
   outline-offset: 4px;
@@ -513,18 +768,36 @@
   );
   gap: var(--hand-gap, 8px);
 }
+.design-refresh .table-screen[data-card-scale='roomy'] .player-seat,
 .design-refresh .table-screen[data-card-scale='large'] .player-seat {
   gap: 14px;
 }
 .design-refresh .table-screen[data-card-scale='medium'] .player-seat {
   gap: 11px;
 }
+.design-refresh .table-screen[data-card-scale='laptop'] .player-seat {
+  gap: 11px;
+}
 .design-refresh .table-topline {
   min-height: 28px;
 }
-.design-refresh .table-screen[data-card-scale='large'] {
-  --card-w: 72px;
-  --card-h: 105px;
+.design-refresh .table-screen[data-card-scale='roomy'],
+.design-refresh .table-screen[data-card-scale='roomy'] .peek-desk {
+  --card-w: 88px;
+  --card-h: 128px;
+}
+.design-refresh .table-screen[data-card-scale='roomy'] .felt-table {
+  grid-template-rows: minmax(0, 1fr) minmax(154px, 0.8fr) auto;
+}
+.design-refresh .table-screen[data-card-scale='large'],
+.design-refresh .table-screen[data-card-scale='large'] .peek-desk {
+  --card-w: 80px;
+  --card-h: 116px;
+}
+.design-refresh .table-screen[data-card-scale='laptop'],
+.design-refresh .table-screen[data-card-scale='laptop'] .peek-desk {
+  --card-w: 68px;
+  --card-h: 99px;
 }
 .design-refresh .table-screen[data-card-scale='medium'] {
   --card-w: 60px;
@@ -534,6 +807,9 @@
   grid-template-rows: minmax(0, 1fr) 146px auto;
 }
 .design-refresh .table-screen[data-card-scale='medium'] .felt-table {
+  grid-template-rows: minmax(0, 1fr) 126px auto;
+}
+.design-refresh .table-screen[data-card-scale='laptop'] .felt-table {
   grid-template-rows: minmax(0, 1fr) 126px auto;
 }
 .design-refresh [data-drawn] {
@@ -2299,5 +2575,120 @@
     top: 0;
     bottom: auto;
     transform: none;
+  }
+}
+/* Reserve the action strip and controls while making room for readable cards
+   on laptop displays with less vertical space. */
+@media (min-width: 950px) and (min-height: 700px) and (max-height: 849px) {
+  .design-refresh .table-screen .felt-table {
+    padding-top: 116px;
+    padding-bottom: 110px;
+    gap: 10px;
+  }
+  .design-refresh .table-screen[data-card-scale] .player-seat {
+    gap: 8px;
+  }
+  .design-refresh .table-screen[data-cabo='true'] .felt-table {
+    padding-top: 149px;
+  }
+}
+@media (max-height: 740px) and (min-width: 761px) {
+  .personal-deck-setting {
+    margin-top: 10px;
+  }
+  .design-refresh .personal-deck-button {
+    min-height: 46px;
+    padding: 5px 8px;
+  }
+  .personal-deck-preview {
+    width: 24px;
+    height: 34px;
+    flex-basis: 24px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel fieldset {
+    margin: 12px 0;
+  }
+}
+@media (max-height: 499px) {
+  .personal-deck-setting {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+  }
+  .personal-deck-setting > div {
+    margin: 0;
+    font-size: 9px;
+  }
+  .personal-deck-setting small {
+    display: none;
+  }
+  .design-refresh .personal-deck-button {
+    min-height: 31px;
+    padding: 2px 5px;
+    gap: 6px;
+    font-size: 9px;
+  }
+  .personal-deck-preview {
+    width: 18px;
+    height: 26px;
+    flex-basis: 18px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel fieldset {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) and (min-height: 500px) and (max-height: 700px) {
+  .personal-deck-setting {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .personal-deck-setting > div {
+    margin: 0;
+    font-size: 11px;
+  }
+  .personal-deck-setting small {
+    display: none;
+  }
+  .design-refresh .personal-deck-button {
+    min-height: 36px;
+    padding: 3px 7px;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .personal-deck-preview {
+    width: 21px;
+    height: 30px;
+    flex-basis: 21px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel {
+    padding: 12px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel .panel-heading h2 {
+    font-size: 16px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel fieldset {
+    margin: 10px 0;
+    gap: 8px 10px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel label {
+    font-size: 10px;
+  }
+  .design-refresh .blackjack-lobby .settings-panel select {
+    margin-top: 4px;
+    min-height: 28px;
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+  .design-refresh .blackjack-lobby .settings-note {
+    padding-top: 8px;
+  }
+  .design-refresh .blackjack-lobby .settings-note p {
+    font-size: 10px;
+    line-height: 1.35;
   }
 }

@@ -123,3 +123,16 @@ test('reduced motion shows active desks directly without retaining departing car
   game.initialChoices = {};
   assert.deepEqual(cardViews(visible, publicRoom(game, host, at + 500), at + 500, true), []);
 });
+test('a departing viewer cannot leave a return animation aimed at a missing desk', () => {
+  const { game, host, guest, at } = setup();
+  const extra = player('Third player');
+  game.players.push(extra);
+  game.phase = 'playing';
+  game.initialChoices = {};
+  game.privatePeek = { playerId: guest, cardIds: [game.players[0].cards[0].id], until: at + 5000 };
+  game.stage = 'power-view';
+  const visible = cardViews([], publicRoom(game, host, at), at);
+  assert.equal(visible.length, 1);
+  act(game, guest, { type: 'leave' }, at + 100);
+  assert.deepEqual(cardViews(visible, publicRoom(game, host, at + 100), at + 100), []);
+});

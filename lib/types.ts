@@ -94,7 +94,7 @@ export type Room = {
   winnerNames: string[];
   events: GameEvent[];
   replacement?: Replacement | null;
-  endReason?: 'cabo' | 'deck' | null;
+  endReason?: 'cabo' | 'deck' | 'players' | null;
   movement?: CardMovement | null;
 };
 export type PublicRoom = Omit<
