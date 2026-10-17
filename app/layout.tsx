@@ -2,16 +2,19 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import './design.css';
+import './retro.css';
 
-const club = localFont({
-  src: [
-    { path: '../public/fonts/dm-sans-400.woff2', weight: '400', style: 'normal' },
-    { path: '../public/fonts/dm-sans-500.woff2', weight: '500', style: 'normal' },
-    { path: '../public/fonts/dm-sans-600.woff2', weight: '600', style: 'normal' },
-    { path: '../public/fonts/dm-sans-700.woff2', weight: '700', style: 'normal' },
-  ],
+const pixel = localFont({
+  src: '../public/fonts/pixelify-sans.ttf',
+  weight: '400 700',
   display: 'swap',
   variable: '--club-font',
+});
+const arcade = localFont({
+  src: '../public/fonts/press-start-2p.ttf',
+  weight: '400',
+  display: 'swap',
+  variable: '--arcade-font',
 });
 export const metadata: Metadata = {
   title: 'Cabo',
@@ -21,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={club.variable}>{children}</body>
+      <body className={`${pixel.variable} ${arcade.variable}`}>{children}</body>
     </html>
   );
 }

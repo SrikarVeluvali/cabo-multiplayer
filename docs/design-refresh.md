@@ -1,5 +1,7 @@
 # Cabo visual refresh
 
+The current 8-bit presentation is documented in [retro-design.md](retro-design.md). This document records the earlier card-club refresh and the game layout and animation foundations it established.
+
 ## Direction
 
 A private card-game club for friends, built around the tactile objects of play. Keep the established green and brass identity, but replace generic interface decoration with an actual deck, engraved sleeves, photographic artwork, and woven felt.

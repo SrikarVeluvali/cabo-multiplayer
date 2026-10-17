@@ -1,0 +1,806 @@
+/* Pine and brass, through an eight-bit lens. Layout and card-flight geometry
+   stay in design.css; this layer owns the site's shared visual language. */
+.cabo-app.retro-arcade {
+  --card-corners: polygon(
+    4px 0,
+    calc(100% - 4px) 0,
+    calc(100% - 4px) 2px,
+    calc(100% - 2px) 2px,
+    calc(100% - 2px) 4px,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(100% - 4px) calc(100% - 2px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    4px calc(100% - 2px),
+    2px calc(100% - 2px),
+    2px calc(100% - 4px),
+    0 calc(100% - 4px),
+    0 4px,
+    2px 4px,
+    2px 2px,
+    4px 2px
+  );
+  --pixel-edge: #6d826c;
+  --pixel-shadow: #0b1d16;
+  --pixel-highlight: #a8b9a638;
+  font-family: var(--club-font), monospace;
+  font-size: 16px;
+  -webkit-font-smoothing: auto;
+  text-rendering: optimizeSpeed;
+}
+.cabo-app.retro-arcade[data-theme='light'] {
+  --pixel-edge: #78927a;
+  --pixel-shadow: #a6b9a1;
+  --pixel-highlight: #ffffffa0;
+}
+.retro-arcade :is(h1, h2, h3, strong, button, input, select) {
+  letter-spacing: 0;
+}
+.retro-arcade :is(button, input, select):focus-visible {
+  outline: 2px dashed var(--gold);
+  outline-offset: 4px;
+}
+.cabo-app.retro-arcade :is(button, input, select, dialog, .segmented, .badge, .avatar) {
+  border-radius: 0;
+}
+.retro-arcade .game-header {
+  border-bottom: 2px solid var(--surface-3);
+  box-shadow: 0 2px 0 var(--pixel-shadow);
+}
+.retro-arcade .brand strong {
+  font-family: var(--arcade-font), monospace;
+  font-size: 18px;
+  line-height: 1.3;
+  letter-spacing: -1px;
+  font-weight: 400;
+}
+.retro-arcade .brand small {
+  font-size: 10px;
+  margin-top: 3px;
+}
+.retro-arcade .brand-emblem {
+  border: 2px solid var(--gold);
+  border-radius: 0;
+  box-shadow: 2px 2px 0 var(--surface-3);
+}
+.retro-arcade .header-tagline {
+  font-size: 15px;
+}
+.cabo-app.retro-arcade .button {
+  border: 2px solid var(--pixel-edge);
+  box-shadow:
+    0 3px 0 var(--pixel-shadow),
+    inset 0 2px 0 var(--pixel-highlight);
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    background-color 100ms,
+    border-color 100ms;
+}
+.cabo-app.retro-arcade .button.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+  box-shadow:
+    0 3px 0 var(--pixel-shadow),
+    inset 0 2px 0 #f0efe560;
+}
+.cabo-app.retro-arcade .button.gold {
+  border-color: #cfb681;
+  background: #cfb681;
+  color: #19271f;
+  box-shadow:
+    0 3px 0 var(--pixel-shadow),
+    inset 0 2px 0 #f0efe560;
+}
+.cabo-app.retro-arcade .button.secondary {
+  background: var(--surface-2);
+  border-color: var(--surface-3);
+}
+.cabo-app.retro-arcade .button:not(:disabled):hover {
+  border-color: var(--gold);
+  filter: none;
+}
+.cabo-app.retro-arcade .button:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 0 var(--pixel-shadow),
+    inset 0 2px 0 #12251f30;
+}
+.retro-arcade :is(.icon-button, .table-options summary) {
+  border: 1px solid var(--surface-3);
+  background: var(--surface);
+  box-shadow: 2px 2px 0 var(--pixel-shadow);
+}
+.cabo-app.retro-arcade .table-options summary,
+.retro-arcade :is(.buzzer-owner, .peek-status, .pile b) {
+  border-radius: 0;
+}
+.retro-arcade .table-screen .timer-disc:has(svg):has(b) {
+  border-radius: 0;
+}
+.retro-arcade .segmented {
+  border: 2px solid var(--surface-3);
+  padding: 3px;
+}
+.retro-arcade .segmented button.selected {
+  box-shadow: inset 0 2px 0 var(--pixel-highlight);
+}
+.cabo-app.retro-arcade :is(input, select) {
+  border: 2px solid var(--surface-3);
+  box-shadow: inset 2px 2px 0 var(--pixel-shadow);
+  font-size: 16px;
+}
+.retro-arcade input::placeholder {
+  color: var(--muted);
+}
+.retro-arcade .code-input {
+  font-family: var(--arcade-font), monospace;
+  font-size: 14px;
+}
+
+/* Pixel court-card artwork; controls remain accessible HTML. */
+.retro-arcade .welcome-copy {
+  background: #12251f;
+  border: 3px solid var(--surface-3);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--pixel-shadow);
+}
+.retro-arcade .welcome-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: contain;
+  object-position: right top;
+}
+.retro-arcade .welcome-copy::after {
+  background: none;
+}
+.retro-arcade .welcome-title {
+  left: 32px;
+  bottom: 34px;
+  max-width: calc(100% - 56px);
+}
+.arcade-intro {
+  display: block;
+  margin-bottom: 22px;
+  font-size: 14px;
+  color: #c9af79;
+}
+.retro-arcade .welcome-copy h1 {
+  font-family: var(--arcade-font), monospace;
+  font-size: clamp(48px, 5.5vw, 88px);
+  line-height: 1.25;
+  letter-spacing: -4px;
+  font-weight: 400;
+  text-shadow: 4px 4px 0 #12251f;
+  margin-bottom: 20px;
+}
+.retro-arcade .welcome-title p {
+  font-size: 19px;
+  line-height: 1.45;
+}
+.retro-arcade .welcome-player-count {
+  font-size: 14px;
+  margin-top: 24px;
+}
+.retro-arcade .entry-panel {
+  border: 2px solid var(--surface-3);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 var(--pixel-shadow),
+    inset 0 3px 0 var(--pixel-highlight);
+}
+.retro-arcade .entry-panel h2 {
+  font-size: 34px;
+}
+.retro-arcade .entry-panel > p {
+  font-size: 15px;
+}
+.retro-arcade .entry-panel .segmented button {
+  font-size: 15px;
+}
+.retro-arcade .entry-panel form label {
+  font-size: 14px;
+}
+.retro-arcade .entry-divider span {
+  font-size: 13px;
+}
+.retro-arcade .entry-panel .entry-rules {
+  font-size: 15px;
+}
+
+/* Lobby, with a stitched-pixel playfield and square player portraits. */
+.retro-arcade .waiting-heading h1 {
+  font-family: var(--arcade-font), monospace;
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.retro-arcade .waiting-heading p {
+  font-size: 15px;
+}
+.retro-arcade .badge {
+  border: 1px solid var(--surface-3);
+  font-size: 14px;
+}
+.cabo-app.retro-arcade .blackjack-lobby .guest-grid {
+  border: 4px solid #1b3029;
+  border-radius: 0;
+  background: url('/art/pixel-felt.svg') repeat;
+  box-shadow:
+    inset 0 0 0 2px #a8b9a64d,
+    4px 4px 0 var(--pixel-shadow);
+}
+.retro-arcade .guest-grid::before,
+.retro-arcade .felt-mark strong {
+  font-family: var(--arcade-font), monospace;
+  font-size: 40px;
+  letter-spacing: -2px;
+  font-weight: 400;
+}
+.cabo-app.retro-arcade .blackjack-lobby .guest-seat .avatar {
+  border-radius: 0;
+  border: 2px solid #a8b9a680;
+  box-shadow: 3px 3px 0 #12251f;
+}
+.cabo-app.retro-arcade .empty-avatar {
+  border-radius: 0;
+  border: 2px dashed #a8b9a680;
+}
+.retro-arcade .blackjack-lobby .guest-seat > strong {
+  font-size: 16px;
+}
+.retro-arcade .guest-status,
+.retro-arcade .empty-seat > span:last-child {
+  font-size: 12px;
+}
+.cabo-app.retro-arcade .blackjack-lobby .empty-seat:hover {
+  border-radius: 0;
+}
+.cabo-app.retro-arcade .blackjack-lobby .settings-panel {
+  border: 2px solid var(--surface-3);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 var(--pixel-shadow),
+    inset 0 3px 0 var(--pixel-highlight);
+}
+.retro-arcade .panel-heading h2 {
+  font-size: 22px;
+}
+.retro-arcade .settings-panel label,
+.retro-arcade .personal-deck-setting > div {
+  font-size: 14px;
+}
+.retro-arcade .personal-deck-setting small {
+  font-size: 12px;
+}
+.retro-arcade .personal-deck-button {
+  font-size: 15px;
+}
+.retro-arcade .blackjack-lobby .settings-panel select {
+  font-size: 15px;
+}
+.retro-arcade .lobby-invite-code > strong {
+  font-family: var(--arcade-font), monospace;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+.retro-arcade .lobby-invite-code > span,
+.retro-arcade .settings-note {
+  font-size: 13px;
+}
+.retro-arcade .settings-note .note-card {
+  border-radius: 0;
+}
+
+/* Table: keep the entire playing area clear; pixel detail is in the surface. */
+.cabo-app.retro-arcade .table-screen .felt-table {
+  background: url('/art/pixel-felt.svg') repeat;
+  box-shadow: inset 0 0 0 6px #1b3029;
+}
+.cabo-app.retro-arcade .table-screen .felt-table::before {
+  border-radius: 0;
+  border: 2px dashed #a8b9a626;
+}
+.retro-arcade .table-room {
+  font-family: var(--arcade-font), monospace;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+.retro-arcade .table-screen .table-phase {
+  font-size: 14px;
+}
+.retro-arcade .table-screen .table-phase small {
+  font-size: 13px;
+}
+.cabo-app.retro-arcade .table-options-menu {
+  border: 2px solid var(--pixel-edge);
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--pixel-shadow);
+  backdrop-filter: none;
+}
+.retro-arcade .table-options-menu button {
+  font-size: 15px;
+}
+.cabo-app.retro-arcade .table-screen .nameplate {
+  border-radius: 0;
+  background: #1b3029;
+  border: 1px solid #a8b9a64d;
+  box-shadow: 2px 2px 0 #12251f;
+}
+.retro-arcade .nameplate .avatar {
+  border-radius: 0;
+  background: #2c493d;
+}
+.retro-arcade .table-screen .has-turn .nameplate {
+  border: 1px solid #c9af79;
+  box-shadow:
+    3px 3px 0 #12251f,
+    inset 3px 0 0 #c9af79;
+}
+.retro-arcade .table-screen .nameplate strong {
+  font-size: 15px;
+}
+.retro-arcade .table-screen .nameplate > div > span {
+  font-size: 11px;
+  line-height: 1;
+}
+.retro-arcade .card-number {
+  font-size: 12px;
+}
+.cabo-app.retro-arcade .card-side {
+  border-radius: 0;
+  clip-path: var(--card-corners);
+  box-shadow: 2px 3px 0 #12251f90;
+}
+.retro-arcade .card-back {
+  border: 0;
+}
+.retro-arcade .card-sleeve-img {
+  image-rendering: pixelated;
+}
+.retro-arcade .deck-stack::before,
+.retro-arcade .deck-stack::after {
+  border-radius: 0;
+  clip-path: var(--card-corners);
+}
+.retro-arcade .card-placeholder {
+  border-radius: 0;
+}
+.retro-arcade :is(.peek-desk, .view-desk-placeholder, .drawn-card, .public-reveal) {
+  border-radius: 0;
+}
+.retro-arcade .table-screen .action-dock {
+  border: 2px solid var(--surface-3);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 #12251f,
+    inset 0 3px 0 var(--pixel-highlight);
+}
+.retro-arcade .timer-disc {
+  border-radius: 0;
+  background: var(--surface-2);
+  font-family: var(--arcade-font), monospace;
+  font-size: 14px;
+}
+.retro-arcade .table-screen .table-action-notice {
+  border-radius: 0;
+  border: 2px solid #c9af7973;
+  box-shadow: 3px 3px 0 #12251f;
+}
+.retro-arcade .table-screen .table-action-notice strong {
+  font-size: 18px;
+}
+.retro-arcade .table-screen .table-action-notice p {
+  font-size: 13px;
+}
+.retro-arcade .table-screen .dock-description h2 {
+  font-size: 21px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.retro-arcade .table-screen .dock-description p {
+  font-size: 15px;
+  line-height: 1.3;
+  max-width: none;
+}
+.retro-arcade .table-screen .cabo-banner {
+  border: 1px solid #c9af7973;
+  border-radius: 0;
+  font-size: 12px;
+}
+.retro-arcade .table-screen .buzzer-holder .nameplate {
+  animation-timing-function: steps(2, end);
+}
+
+/* The field guide, deck library, activity and Mathbo share one frame system. */
+.cabo-app.retro-arcade
+  :is(.rules-dialog, .deck-dialog, .activity-dialog, .confirm-cabo, .mathbo-dialog) {
+  border: 3px solid var(--pixel-edge);
+  border-radius: 0;
+  box-shadow:
+    6px 6px 0 var(--pixel-shadow),
+    inset 0 3px 0 var(--pixel-highlight);
+}
+.retro-arcade dialog::backdrop {
+  background: #0b1d16d9;
+  backdrop-filter: none;
+}
+.retro-arcade :is(.deck-choice, .deck-choice-mark, .deck-preview-card, .personal-deck-preview) {
+  border-radius: 0;
+}
+.retro-arcade :is(.deck-preview-card, .personal-deck-preview) {
+  clip-path: var(--card-corners);
+}
+.retro-arcade .rules-walkthrough .lesson-copy .rule-callout {
+  border-radius: 0;
+}
+.retro-arcade .lesson-scene::before {
+  background: none;
+}
+.retro-arcade .deck-preview-card:first-child {
+  transform: translate(8px, 6px);
+}
+.retro-arcade .deck-preview-card:last-child {
+  transform: translate(-8px, 6px);
+}
+.retro-arcade .deck-choice {
+  border: 2px solid var(--surface-3);
+  box-shadow: 3px 3px 0 var(--pixel-shadow);
+}
+.retro-arcade .deck-choice-selected {
+  border-color: var(--gold);
+  box-shadow:
+    3px 3px 0 var(--pixel-shadow),
+    inset 0 3px 0 var(--gold-soft);
+}
+.retro-arcade :is(.deck-choice-copy strong, .deck-dialog-heading p, .deck-dialog-footer > span) {
+  font-size: 16px;
+}
+.retro-arcade .deck-choice-copy > span {
+  font-size: 15px;
+}
+.retro-arcade .deck-credit {
+  font-size: 12px;
+}
+.retro-arcade
+  :is(
+    .lesson-scene,
+    .lesson-replay,
+    .lesson-buzzer,
+    .lesson-math-equation,
+    .lesson-feedback,
+    .lesson-expressions button
+  ) {
+  border-radius: 0;
+}
+.retro-arcade .lesson-scene {
+  background: url('/art/pixel-felt.svg') repeat;
+  border: 3px solid #1b3029;
+  box-shadow: inset 0 0 0 1px #a8b9a650;
+}
+.retro-arcade .lesson-copy p {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.retro-arcade :is(.lesson-nav button, .lesson-replay, .lesson-expressions button) {
+  font-size: 14px;
+}
+.retro-arcade :is(.lesson-scene-caption, .lesson-demo-hint, .lesson-feedback) {
+  font-size: 14px;
+}
+.retro-arcade .lesson-nav button[aria-current] {
+  box-shadow: inset 0 -3px 0 var(--gold);
+}
+.retro-arcade
+  :is(
+    .mathbo-timer,
+    .mathbo-values > span,
+    .mathbo-values > div,
+    .mathbo-expression,
+    .mathbo-keys button,
+    .mathbo-preview
+  ) {
+  border-radius: 0;
+}
+.retro-arcade .mathbo-keys button {
+  border: 1px solid var(--pixel-edge);
+  box-shadow: 0 2px 0 var(--pixel-shadow);
+  font-size: 18px;
+}
+.retro-arcade .mathbo-keys button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+.retro-arcade .mathbo-expression {
+  font-size: 24px;
+}
+.retro-arcade .activity-dialog ol {
+  scrollbar-color: var(--gold) var(--bg);
+}
+.retro-arcade .activity-dialog li {
+  font-size: 15px;
+}
+.retro-arcade :is(.toast, .connection-banner) {
+  border-radius: 0;
+  border: 2px solid var(--pixel-edge);
+  box-shadow: 3px 3px 0 var(--pixel-shadow);
+}
+.cabo-app.retro-arcade .blackjack-lobby .waiting-leave,
+.cabo-app.retro-arcade .table-options-menu .leave-table-action {
+  background: #b93838;
+  color: #fff;
+  border-color: #b93838;
+}
+
+@media (max-width: 1100px) {
+  .retro-arcade .waiting-heading h1 {
+    font-size: 17px;
+  }
+  .retro-arcade .blackjack-lobby .settings-panel select {
+    font-size: 14px;
+  }
+}
+@media (max-width: 760px) and (min-height: 500px) {
+  .retro-arcade .welcome-photo {
+    height: 58%;
+    object-position: right top;
+  }
+  .retro-arcade .brand strong {
+    font-size: 15px;
+  }
+  .retro-arcade .brand small {
+    font-size: 8px;
+  }
+  .retro-arcade .welcome-title {
+    left: 20px;
+    bottom: 18px;
+  }
+  .retro-arcade .arcade-intro {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  .retro-arcade .welcome-copy h1 {
+    font-size: 40px;
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+  }
+  .retro-arcade .welcome-title p {
+    font-size: 15px;
+  }
+  .retro-arcade .entry-panel {
+    padding: 20px;
+  }
+  .retro-arcade .entry-panel h2 {
+    font-size: 27px;
+  }
+  .retro-arcade .entry-panel > p {
+    font-size: 14px;
+  }
+  .retro-arcade .entry-panel .segmented button {
+    font-size: 14px;
+  }
+  .retro-arcade .waiting-heading h1 {
+    font-size: 14px;
+  }
+  .retro-arcade .waiting-heading p {
+    font-size: 13px;
+  }
+  .retro-arcade .blackjack-lobby .guest-seat > strong {
+    font-size: 14px;
+  }
+  .retro-arcade .blackjack-lobby .guest-status {
+    font-size: 11px;
+  }
+  .retro-arcade .lobby-invite-code > strong {
+    font-size: 14px;
+  }
+  .retro-arcade .rules-walkthrough .lesson-copy p {
+    font-size: 15px;
+  }
+  .retro-arcade .table-screen .table-phase {
+    font-size: 12px;
+  }
+  .retro-arcade .table-room {
+    font-size: 9px;
+  }
+  .retro-arcade .table-screen .nameplate strong {
+    font-size: 13px;
+  }
+  .retro-arcade .table-screen .nameplate > div > span {
+    font-size: 10px;
+  }
+  .retro-arcade .table-screen .dock-description h2 {
+    font-size: 19px;
+  }
+  .retro-arcade .table-screen .dock-description p {
+    font-size: 13px;
+  }
+  .retro-arcade .table-screen .table-action-notice strong {
+    font-size: 16px;
+  }
+  .retro-arcade .table-screen .table-action-notice p {
+    font-size: 12px;
+  }
+  .retro-arcade .table-screen .cabo-banner {
+    font-size: 10px;
+  }
+}
+@media (max-height: 740px) and (min-width: 761px) {
+  .retro-arcade .entry-panel .segmented {
+    margin: 14px 0;
+  }
+  .retro-arcade .entry-panel > p {
+    margin-top: 4px;
+  }
+  .retro-arcade .table-screen .dock-description h2 {
+    font-size: 21px;
+  }
+}
+@media (max-height: 699px) and (max-width: 760px) and (min-height: 500px) {
+  .retro-arcade .welcome-photo {
+    width: 50%;
+    height: 100%;
+    left: auto;
+    object-position: right center;
+  }
+  .retro-arcade .welcome-title {
+    left: 14px;
+    bottom: 12px;
+  }
+  .retro-arcade .welcome-copy h1 {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+  .retro-arcade .arcade-intro {
+    display: none;
+  }
+  .retro-arcade .welcome-title p {
+    max-width: 58%;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .retro-arcade .entry-panel {
+    padding: 12px 14px;
+  }
+  .retro-arcade .entry-panel h2 {
+    font-size: 23px;
+  }
+  .retro-arcade .entry-panel form label {
+    font-size: 12px;
+  }
+  .retro-arcade .entry-panel .button {
+    font-size: 13px;
+  }
+  .retro-arcade .entry-panel .segmented button {
+    font-size: 12px;
+  }
+  .retro-arcade .blackjack-lobby .settings-panel {
+    padding: 12px;
+  }
+  .retro-arcade .blackjack-lobby .settings-panel select {
+    font-size: 12px;
+  }
+  .retro-arcade .settings-panel label,
+  .retro-arcade .personal-deck-setting > div {
+    font-size: 12px;
+  }
+  .retro-arcade .personal-deck-setting small {
+    font-size: 10px;
+  }
+  .retro-arcade .table-screen .dock-description h2 {
+    font-size: 16px;
+  }
+  .retro-arcade .table-screen .dock-description p {
+    font-size: 11px;
+  }
+}
+@media (max-height: 499px) {
+  .retro-arcade .entry-panel {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 5px;
+    padding: 9px 12px;
+  }
+  .retro-arcade .entry-panel .segmented {
+    margin-bottom: 0;
+  }
+  .retro-arcade .entry-panel form > .button {
+    min-height: 32px;
+    padding: 6px 8px;
+  }
+  .retro-arcade .entry-panel .button.secondary.wide,
+  .retro-arcade .entry-panel .entry-rules {
+    grid-column: 1 / -1;
+    min-height: 30px;
+    margin: 0;
+    padding: 5px 8px;
+  }
+  .retro-arcade .brand strong {
+    font-size: 14px;
+  }
+  .retro-arcade .welcome-copy h1 {
+    font-size: 36px;
+  }
+  .retro-arcade .welcome-title {
+    left: 16px;
+    bottom: 16px;
+  }
+  .retro-arcade .arcade-intro {
+    display: none;
+  }
+  .retro-arcade .welcome-title p {
+    font-size: 13px;
+  }
+  .retro-arcade .entry-panel h2 {
+    font-size: 22px;
+  }
+  .retro-arcade .entry-panel > p {
+    font-size: 12px;
+  }
+  .retro-arcade .entry-panel .segmented button {
+    font-size: 12px;
+  }
+  .retro-arcade .entry-panel .button {
+    font-size: 12px;
+  }
+  .retro-arcade .waiting-heading h1 {
+    font-size: 13px;
+  }
+  .retro-arcade .blackjack-lobby .settings-panel {
+    padding: 8px;
+  }
+  .retro-arcade .blackjack-lobby .settings-panel select {
+    font-size: 10px;
+  }
+  .retro-arcade .settings-panel label {
+    font-size: 10px;
+  }
+  .retro-arcade .lobby-invite-code > strong {
+    font-size: 12px;
+  }
+  .retro-arcade .table-screen .table-phase {
+    font-size: 11px;
+  }
+  .retro-arcade .table-screen .dock-description h2 {
+    font-size: 15px;
+  }
+  .retro-arcade .table-screen .dock-description p {
+    font-size: 11px;
+  }
+  .retro-arcade .table-screen .dock-actions .button {
+    font-size: 11px;
+  }
+  .retro-arcade .table-screen .table-action-notice strong {
+    font-size: 14px;
+  }
+  .retro-arcade .table-screen .nameplate strong {
+    font-size: 12px;
+  }
+  .retro-arcade .table-screen .nameplate > div > span {
+    font-size: 9px;
+  }
+  .retro-arcade .table-screen .timer-disc {
+    font-size: 10px;
+  }
+  .retro-arcade .rules-walkthrough .lesson-copy p {
+    font-size: 13px;
+  }
+  .retro-arcade .mathbo-keys button {
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cabo-app.retro-arcade .button {
+    transition: none;
+  }
+  .retro-arcade .table-screen .buzzer-holder .nameplate {
+    animation: none;
+  }
+}

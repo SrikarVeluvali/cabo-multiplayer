@@ -1,11 +1,11 @@
 {
-  "defaultTheme": "classic",
+  "defaultTheme": "8-bit",
   "themes": [
     {
       "id": "classic",
       "name": "Classic",
       "description": "The original illustrated deck.",
-      "back": "/art/engraved-sleeve.webp",
+      "back": "/art/pixel-sleeve.svg",
       "background": "#ffffff",
       "face": {
         "type": "files",
@@ -45,6 +45,7 @@
     {
       "id": "8-bit",
       "name": "8-bit theme",
+      "back": "/art/pixel-sleeve.svg",
       "description": "Balatro's basic pixel-art deck.",
       "credit": "User-supplied Balatro BASIC artwork",
       "background": "transparent",

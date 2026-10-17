@@ -8,7 +8,9 @@ A private multiplayer card game by **Srikar Veluvali**. Remember hidden cards, u
 
 The screenshots below show the current source version. The hosted link runs the last deployed release; local changes appear there after deployment.
 
-![Cabo welcome screen with custom table artwork and create, join, practice, and rules controls](docs/screenshots/welcome.jpg)
+The interface has an understated 8-bit arcade style: locally hosted pixel fonts, a pine-green playfield, gold controls, original pixel-art scenery, and stepped corners on every card theme. Card movement remains smooth and readable.
+
+![Cabo's retro welcome screen with pixel art and create, join, practice, and rules controls](docs/screenshots/retro-home.jpg)
 
 ## A table for your friends
 
@@ -17,13 +19,15 @@ The screenshots below show the current source version. The hosted link runs the 
 3. In the waiting room, choose **Snap Rule → Matching ranks or Mathbo**, the turn timer, and table pace. Mathbo adds an expression timer.
 4. Guests mark themselves ready. The host starts the game.
 
-![Waiting room with seats, invitations, Mathbo settings, and a red Leave table button](docs/screenshots/waiting-room.jpg)
+![Retro waiting room with seats, invitations, personal deck settings, and a red Leave table button](docs/screenshots/retro-lobby.jpg)
 
 ## Made for playing
 
 **Customize your deck:** open **Table settings → Your deck** in the waiting room, or **Table options → Customize deck** while playing. Every player, including guests, can choose their own artwork. Classic, Deltarune, Deltarune High contrast, and **8-bit theme** are included. Your choice is saved on your device and applies to card faces throughout the table and its animations. Add future themes with images and one JSON entry; see [Custom card themes](docs/deck-themes.md).
 
-![Choose Classic, either Deltarune palette, or the original 8-bit deck](docs/screenshots/deck-themes.jpg)
+New players start with the **8-bit theme**; existing saved choices are preserved. Every theme, including custom decks, uses the same stepped pixel corners across previews, peeks, reveals, and animations. Original card image files are unchanged.
+
+![Choose Classic, either Deltarune palette, or the original 8-bit deck, all with pixel-rounded corners](docs/screenshots/retro-decks.jpg)
 
 The live table fills the screen with the cards and controls. Action notices have their own strip above the hands, leaving the piles clear. Open the scrollable **Table activity** log to follow earlier moves, or **Table options** for sound, theme, rules, and leaving.
 
@@ -34,15 +38,15 @@ The live table fills the screen with the cards and controls. Action notices have
 - Dark and light themes, optional synthesized sounds, keyboard focus, and reduced-motion support are included.
 - Phone layouts fit the viewport. On small screens with more opponents, player pages follow the relevant action.
 
-![Desktop table with the draw, discard, private drawn card, and turn controls](docs/screenshots/table-desktop.jpg)
+![Retro desktop table with a custom deck, shared pixel sleeves, and turn controls](docs/screenshots/retro-table.jpg)
 
-<img src="docs/screenshots/table-mobile.jpg" alt="Phone table during a private spy peek, with all controls inside the screen" width="300" />
+<img src="docs/screenshots/retro-table-mobile.jpg" alt="Retro phone table with the cards and controls inside the screen" width="300" />
 
 ## How to play
 
 These are the house rules implemented by this game. **Learn the rules** opens eight interactive lessons: try opening peeks, replay replacements and powers, test Mathbo expressions, and compare snap and CABO outcomes without affecting a live table.
 
-![Interactive rules guide with two chosen practice cards](docs/screenshots/rules-walkthrough.jpg)
+![Retro interactive rules guide with two chosen practice cards](docs/screenshots/retro-rules.jpg)
 
 ### Deal and scoring
 
@@ -86,8 +90,6 @@ Looking and swapping are **separate choices**. With Q or black K, you can look a
 
 Power peeks last up to **five seconds**. Only the acting player receives the faces. Cards turn back over and travel to their original slots before another swap or turn proceeds. A CABO caller's cards can be looked at, but cannot be swapped.
 
-![A black king power showing two cards at the acting player's private desk](docs/screenshots/private-peek.jpg)
-
 ### Snap buzzer: Matching ranks
 
 Remember a card matching the **rank** of the top discard? Hit **Snap buzzer**, even out of turn. All kings match, regardless of color or suit.
@@ -130,7 +132,7 @@ Choose **Mathbo** under **Snap Rule** in the waiting room. All other Cabo rules 
 4. **Submit snap** before the timer ends. A correct equation completes your own snap or begins the hidden-gift step for an opponent snap. The exact equation appears in the action notice for **one second** and stays in the activity log.
 5. An invalid submission, **Take penalty**, or a timeout gives the snapper one hidden penalty card. The attempted card stays in place and remains public for five more seconds.
 
-![Mathbo's clickable keypad with a valid card-based expression and countdown](docs/screenshots/mathbo.jpg)
+![Mathbo's retro clickable keypad with a valid card-based expression and countdown](docs/screenshots/retro-mathbo.jpg)
 
 ### Expression rules
 
@@ -155,8 +157,6 @@ The selected number must occur in the expression. Other numeric constants are al
 A card-derived 1 may be the answer itself (`6/6 = 1`), or a term in a valid card-based sum (`6 + 6/6 = 7`). A literal Ace or red king keeps its normal value of 1 or −1.
 
 Supported operations are `×`, `÷`, powers (`^`), factorial (`!`), `log2`, `log10`, `sqrt`, `abs`, parentheses, `nCr(n,r)`, and `nPr(n,r)`, plus the restricted `+` and `−`. Expressions have a **160-character limit** and must produce finite real values with intermediate magnitudes no greater than one trillion. Division by zero and invalid factorial/combinatoric arguments fail. The server parses expressions independently of the editor, without evaluating JavaScript.
-
-![An opponent Mathbo snap keeps the revealed card's original red suit while the snapper chooses a hidden gift](docs/screenshots/opponent-snap.jpg)
 
 ## Run locally
 

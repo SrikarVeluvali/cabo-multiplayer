@@ -2,6 +2,10 @@
 
 Created with the built-in image generation tool for this local UI redesign. PNG originals and optimized WebP assets are in `public/art/`.
 
+## Enhanced pixel court-card welcome image
+
+Current retro theme, created with the built-in image tool. Enhanced 8-bit game-cover artwork with deliberate pixel clusters, intricate sprite detail, selective dithering, and dramatic stepped shading. The right two-thirds contain a sculptural fan of four cream-edged cards: a face-up king of spades with a gold crown, forest-and-sage robes, sword, and mirrored traditional court composition, backed by three angled dark-green sleeves with restrained geometric gold ornament. A small pixel deck grounds the fan. Deep pine #12251f background, subtle dithered halo, quiet left third and lower-left area for HTML text. Palette: forest #284e40, sage #a8b9a6, ivory #f0efe5, gold #c9af79; restrained brick-red accents within the king only. No furniture, wood, chips, people, particles, logos, UI, or large lettering. Original: `public/art/pixel-court.png`; lossless web version: `public/art/pixel-court.webp`.
+
 ## favicon
 
 Use case: logo-brand. Asset type: browser favicon and app icon for Cabo, a minimal multiplayer playing-card game. Create one square flat graphic: a single oversized, beautifully proportioned muted brass-gold spade silhouette centered on a solid deep pine-green background. Use approximately #c9af79 for the spade and #12251f for the background. The spade should occupy about 70 percent of the canvas height, have smooth decisive edges, a broad clean stem, and be instantly recognizable at 16 pixels. Perfectly front-on, crisp vector-like flat colors. Quiet premium card-club identity. No letters, words, numbers, border, extra symbols, textures, gradients, lighting, shadows, bevels, mockup, perspective, or watermark. The entire canvas is the icon itself.

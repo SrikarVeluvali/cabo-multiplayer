@@ -19,12 +19,12 @@ import {
   type DeckTheme,
 } from '../lib/deck-themes';
 
-test('classic theme preserves all original card files, court variants, and sleeve', () => {
+test('classic theme preserves original card faces and uses the shared pixel sleeve', () => {
   const theme = getDeckTheme('classic');
   for (const rank of ranks)
     for (const suit of suits)
       assert.equal(faceArtwork(rank, suit, theme).src, cardArtwork(rank, suit));
-  assert.equal(deckBack(theme), '/art/engraved-sleeve.webp');
+  assert.equal(deckBack(theme), '/art/pixel-sleeve.svg');
   assert.equal(getDeckTheme('removed-theme').id, defaultDeckTheme);
   assert.equal(getDeckTheme(null).id, defaultDeckTheme);
 });

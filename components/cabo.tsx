@@ -101,7 +101,7 @@ function CaboGame() {
   return (
     <MotionConfig reducedMotion="user">
       <div
-        className="cabo-app design-refresh"
+        className="cabo-app design-refresh retro-arcade"
         data-theme={light ? 'light' : 'dark'}
         data-screen={!game.room ? 'welcome' : game.room.phase === 'lobby' ? 'lobby' : 'table'}
       >
@@ -266,13 +266,15 @@ function Welcome({
       <section className="welcome-copy">
         <Image
           className="welcome-photo"
-          src="/art/table-evening.webp"
-          alt="Four engraved green playing cards on a felt table"
-          fill
+          src="/art/pixel-court.webp"
+          alt="A detailed pixel-art king of spades with layered green and gold card backs"
+          width={1536}
+          height={1024}
           sizes="(max-width: 760px) 100vw, 65vw"
           preload
         />
         <div className="welcome-title">
+          <span className="arcade-intro">A card game for your crew</span>
           <h1>Cabo.</h1>
           <p>
             Four hidden cards. Lowest score wins.

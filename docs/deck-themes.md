@@ -2,13 +2,13 @@
 
 In the waiting room, open **Table settings → Your deck**. On phones, first switch to the **Table settings** tab. The control is available to every player, including guests whose room-rule controls are disabled. **Table options → Customize deck** also remains available during play. Choosing a theme applies immediately and is saved on that device. Each player sees their chosen artwork across the whole table, private peeks, public reveals, animations, and rules examples. It is a cosmetic preference: ranks, suits, scores, hidden information, and multiplayer rules are unchanged.
 
-The included choices are **Classic**, **Deltarune**, **Deltarune · High contrast**, and **8-bit theme**. The Deltarune images were copied from the supplied Balatro mod asset pack, with their original filenames and both resolutions preserved. That pack contains transparent face overlays, so the theme supplies an ivory card background. The 8-bit theme uses all 52 original Balatro BASIC PNGs, copied byte-for-byte with their original names, white faces, pixel borders, colors, and transparency. Both use Cabo's existing sleeve. No mod code or Balatro installation is needed.
+The included choices are **Classic**, **Deltarune**, **Deltarune · High contrast**, and **8-bit theme**. New players start with the 8-bit theme; existing saved choices are preserved. The Deltarune images were copied from the supplied Balatro mod asset pack, with their original filenames and both resolutions preserved. That pack contains transparent face overlays, so the theme supplies an ivory card background. The 8-bit theme uses all 52 original Balatro BASIC PNGs, copied byte-for-byte with their original names, white faces, pixel borders, colors, and transparency. All included decks use the shared pixel sleeve. No mod code or Balatro installation is needed.
 
-![Deck theme gallery with original artwork and both Deltarune palettes](screenshots/deck-themes.jpg)
+Every deck has the same stepped pixel corners, including future custom JPEG or atlas themes. A shared CSS mask clips the card faces and backs, preview cards, and animation cards; it never modifies the supplied image files. Card dimensions and travel coordinates remain unchanged.
 
-![Each player's deck control in the waiting-room Table settings](screenshots/deck-settings.jpg)
+![Retro theme gallery with original artwork, both Deltarune palettes, and shared pixel corners](screenshots/retro-decks.jpg)
 
-<img src="screenshots/deck-themes-mobile.jpg" alt="The deck selector on a phone with the high-contrast palette selected" width="300" />
+![Each player's deck control in the waiting-room Table settings](screenshots/retro-lobby.jpg)
 
 Suit colors are part of the artwork. King scoring still follows the suit: hearts/diamonds count as −1, and clubs/spades count as 13.
 
