@@ -17,7 +17,7 @@ The existing palette is retained: pine `#12251f`, panels `#1b3029`, felt `#284e4
 - `app/retro.css` owns the retro styling. `app/design.css` continues to own game geometry and responsive layout.
 - `public/art/pixel-court.png` is the generated court-card welcome illustration; `pixel-court.webp` is its lossless web asset. A detailed pixel king and layered green-and-gold card backs sit against a quiet pine-green field. The artwork is contained rather than cropped, and its phone placement reserves room for real HTML text. See `artwork-prompts.md` for the generation brief.
 - `public/art/pixel-felt.svg` is a small repeating, low-contrast dither tile. It replaces photographic texture on the lobby, board, and practice examples.
-- `public/art/pixel-sleeve.svg` is a crisp geometric card back that can scale without changing the original face artwork.
+- `public/art/pixel-spade-sleeve.webp` is the shared, generated pixel-art card back: a clear gold spade, a simple gold border, four small corner ornaments, and ample pine-green space. It stays legible and quiet across a full hand at small sizes. The full-resolution PNG is preserved beside the optimized web asset. Original face artwork is unchanged.
 - The 8-bit deck is the default for new visitors. Saved deck choices remain personal and are preserved.
 
 All card faces and backs use one two-pixel stair-step corner mask, including the deck gallery, settings thumbnail, custom themes, private peeks, public reveals, replacements, and card flights. Masks are applied to individual printed faces rather than the 3D flip container, preserving backface visibility. The original deck images remain untouched. New themes inherit the same corners automatically.
@@ -29,3 +29,5 @@ Focus indicators remain visible; dialog backgrounds are solid rather than blurre
 Checked the home page, waiting room, card gallery, interactive rules, Mathbo keypad, and table. Desktop checks include 1280×720; phone checks include 390×844, 320×568, and 568×320 landscape. Small layouts retain every main control without page scrolling. The short-phone Mathbo dialog fits within its viewport without internal scrolling. The desktop action dock stays 84px high and clear of the player nameplate.
 
 Live checks included dealing, private peeks, custom card faces, the snap buzzer, a valid Mathbo expression, and the resulting discard/recentering. The full game test suite and production build also pass.
+
+Results use a large gold winner heading above the hands, with a score underneath. It fades in after the card flip, or appears immediately with reduced motion. A resize observer reserves the actual heading height, so long names and shared wins wrap without hiding the cards. Compact screens omit the redundant round-complete label to keep player paging controls on one line.

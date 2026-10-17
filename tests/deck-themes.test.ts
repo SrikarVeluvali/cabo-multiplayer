@@ -24,7 +24,7 @@ test('classic theme preserves original card faces and uses the shared pixel slee
   for (const rank of ranks)
     for (const suit of suits)
       assert.equal(faceArtwork(rank, suit, theme).src, cardArtwork(rank, suit));
-  assert.equal(deckBack(theme), '/art/pixel-sleeve.svg');
+  assert.equal(deckBack(theme), '/art/pixel-spade-sleeve.webp');
   assert.equal(getDeckTheme('removed-theme').id, defaultDeckTheme);
   assert.equal(getDeckTheme(null).id, defaultDeckTheme);
 });

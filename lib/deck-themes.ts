@@ -150,7 +150,7 @@ export function getDeckTheme(id?: string | null): DeckTheme {
   );
 }
 export function deckBack(theme: DeckTheme) {
-  return theme.back ?? getDeckTheme().back ?? '/art/engraved-sleeve.webp';
+  return theme.back ?? getDeckTheme().back ?? '/art/pixel-spade-sleeve.webp';
 }
 export function faceArtwork(rank: Rank, suit: Suit, theme: DeckTheme) {
   const face = theme.face;

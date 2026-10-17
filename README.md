@@ -112,6 +112,10 @@ Call CABO **at the start of your turn, before drawing**. Calling uses that turn 
 - If the caller is tied or beaten, all **other players with the actual lowest total** win together.
 - Round wins carry into rematches. The first player rotates each round.
 
+After the cards reveal, a large gold announcement above the table names the winner and their score. Shared wins name everyone who tied. The heading wraps on small screens while leaving the revealed cards and rematch controls visible.
+
+![The results screen announces the winner above the revealed cards](docs/screenshots/results-winner.jpg)
+
 If the **draw deck runs out before CABO**, the last draw and any power finish, cards settle, and the lowest total wins. Ties share the win. After CABO, older discards may be reshuffled to finish the promised final turns; the top discard stays in place. If no card is available for a required draw or penalty, the round ends with scoring.
 
 ### Timers and reconnecting

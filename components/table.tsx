@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import {
   ArrowClockwise,
@@ -516,6 +516,7 @@ export default function Table({
         data-capacity={capacity}
         data-card-scale={cardScale}
         data-cabo={!!room.caboId && !results}
+        data-results={results}
       >
         <div className="table-topline">
           <div className="table-session">
@@ -617,7 +618,11 @@ export default function Table({
             </details>
           </div>
         </div>
-        <TableAction room={room} now={now} revealing={!!reveals.length} />
+        {results ? (
+          <RoundResult room={room} reduced={!!reduce} />
+        ) : (
+          <TableAction room={room} now={now} revealing={!!reveals.length} />
+        )}
         {room.caboId && !results && (
           <div className="cabo-banner">
             <LockKey />
@@ -992,6 +997,55 @@ export default function Table({
         )}
       </div>
     </LayoutGroup>
+  );
+}
+function RoundResult({ room, reduced }: { room: PublicRoom; reduced: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  const names = room.winnerNames?.length
+    ? room.winnerNames
+    : room.players.filter((p) => room.winners.includes(p.id)).map((p) => p.name);
+  const score = room.players.find((p) => room.winners.includes(p.id))?.score;
+  const headline = names.length
+    ? `${names.join(' & ')} ${names.length === 1 ? 'wins' : 'win'}!`
+    : 'Round ended';
+  useLayoutEffect(() => {
+    const banner = ref.current;
+    const table = banner?.parentElement;
+    if (!banner || !table) return;
+    // Reserve the real height, including wrapped names, before the cards paint.
+    const measure = () => table.style.setProperty('--result-height', `${banner.offsetHeight}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      table.style.removeProperty('--result-height');
+    };
+  }, []);
+  return (
+    <motion.section
+      ref={ref}
+      className="round-result"
+      data-long={headline.length > 42}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduced ? 0 : 0.35, delay: reduced ? 0 : 0.55 }}
+    >
+      <div className="round-result-heading">
+        {names.length > 0 && <Trophy weight="fill" aria-hidden="true" />}
+        <h1>{headline}</h1>
+      </div>
+      <p>
+        {score !== undefined
+          ? `${score} ${score === 1 ? 'point' : 'points'} · ${names.length > 1 ? 'Shared victory' : 'Round winner'}`
+          : names.length
+            ? 'Round winner'
+            : 'No human players remain.'}
+      </p>
+    </motion.section>
   );
 }
 function ConfirmCall({
